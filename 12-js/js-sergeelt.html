@@ -1,0 +1,1568 @@
+<title>JavaScript сэргээлт</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Layout: projector stage, one slide at a time. Header = lesson rail (segment width = minutes) + timer, footer = navigation.
+   Palette: JS yellow as the marker, React cyan as the working accent, cool graphite neutrals. */
+:root{
+  --bg:#ECF0F3; --surface:#FFFFFF; --ink:#101820; --muted:#53606E; --rule:#CBD3DC;
+  --blue:#08799E; --blue-soft:#D6EEF6; --mark:#F7DF1E; --mark-ink:#101820; --hl:#FBEE8A;
+  --code-bg:#121A24; --code-fg:#E2E8EF; --code-dim:#6C7B8C; --code-line:#21344A; --console-bg:#0B1118;
+  --c-kw:#61DAFB; --c-str:#F5D97A; --c-num:#FFA98A; --c-fn:#9BE3B4; --c-fx:#F4B6FF; --c-tag:#FF9DB0; --c-err:#FF8F85; --c-val:#9FE7FF; --c-warn:#F5D97A;
+  --ok:#1C7F4E; --ok-soft:#D9F0E3; --err:#B9342A; --err-soft:#F8DEDA;
+  --f-display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --f-body:"Golos Text","Segoe UI",Roboto,system-ui,sans-serif;
+  --f-code:"JetBrains Mono",Consolas,"Courier New",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C1117; --surface:#151D27; --ink:#E6ECF2; --muted:#98A5B4; --rule:#29364A;
+    --blue:#61DAFB; --blue-soft:#14303D; --hl:#4A4520;
+    --code-bg:#080D13; --code-line:#1A2D42; --console-bg:#04080D;
+    --ok:#5BD093; --ok-soft:#173527; --err:#FF8F85; --err-soft:#3D1D1D;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C1117; --surface:#151D27; --ink:#E6ECF2; --muted:#98A5B4; --rule:#29364A;
+  --blue:#61DAFB; --blue-soft:#14303D; --hl:#4A4520;
+  --code-bg:#080D13; --code-line:#1A2D42; --console-bg:#04080D;
+  --ok:#5BD093; --ok-soft:#173527; --err:#FF8F85; --err-soft:#3D1D1D;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+html{font-size:clamp(14px, calc(0.6vw + 0.55vh + 5px), 24px); height:100%}
+body{height:100%; margin:0; background:var(--bg); color:var(--ink); font-family:var(--f-body); line-height:1.5}
+*{box-sizing:border-box}
+button,input,textarea{font:inherit; color:inherit}
+/* JetBrains Mono ligatures turn => and === into single glyphs; students must see the characters they will type */
+code,pre,kbd,textarea,.code,.console,.chip,.lab-x,.file,.timer-t,.mrow,.opt,.dec,.sheet,.ach,.vbox,.hbox,.screen{font-variant-ligatures:none; font-feature-settings:"calt" 0, "liga" 0}
+:focus-visible{outline:3px solid var(--blue); outline-offset:2px}
+
+.app{height:100%; display:grid; grid-template-rows:auto 1fr auto}
+.gutter{padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px))}
+
+/* ---------- header ---------- */
+.top{display:flex; align-items:center; gap:1.2rem; padding-block:.6rem; background:var(--surface); border-bottom:1px solid var(--rule)}
+.brand{font-family:var(--f-display); font-weight:700; font-size:1rem; white-space:nowrap; display:flex; align-items:baseline; gap:.5rem}
+.brand .js{background:var(--mark); color:var(--mark-ink); padding:0 .3rem; border-radius:3px}
+.brand small{font-family:var(--f-body); font-weight:500; font-size:.8rem; color:var(--muted)}
+.rail{flex:1; display:flex; gap:3px; min-width:0}
+.seg{flex-basis:0; min-width:0; border:0; background:none; padding:0; cursor:pointer; display:flex; flex-direction:column; gap:.25rem; text-align:left}
+.seg-bar{height:.45rem; border-radius:3px; background:var(--rule)}
+.seg.done .seg-bar{background:var(--blue)}
+.seg.cur .seg-bar{background:var(--mark); box-shadow:0 0 0 1.5px var(--mark-ink) inset}
+.seg-l{font-size:.66rem; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.seg.cur .seg-l{color:var(--ink); font-weight:600}
+.timer{display:flex; align-items:center; gap:.4rem; font-variant-numeric:tabular-nums}
+.timer-t{font-family:var(--f-code); font-weight:600; font-size:1.05rem; min-width:7.6rem; text-align:right}
+.timer-t small{font-weight:400; color:var(--muted)}
+.timer.late .timer-t{color:var(--err)}
+.icon-btn{border:1.5px solid var(--rule); background:var(--surface); border-radius:8px; padding:.25rem .55rem; cursor:pointer; font-size:.85rem}
+.icon-btn:hover{border-color:var(--ink)}
+
+/* ---------- stage & slides ---------- */
+.stage{overflow-y:auto; overflow-x:hidden; position:relative}
+.slide{max-width:84rem; margin-inline:auto; min-height:100%; padding-block:1.5rem 2.2rem; display:flex; flex-direction:column; justify-content:center; gap:1.2rem; animation:enter .28s ease-out}
+@keyframes enter{from{opacity:.35; transform:translateY(10px)} to{opacity:1; transform:none}}
+@media (prefers-reduced-motion: reduce){ .slide{animation:none} .pop{animation:none!important} .out{animation:none!important} }
+.eyebrow{display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; font-size:.85rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:600}
+.eyebrow .num{font-family:var(--f-display); color:var(--mark-ink); background:var(--mark); padding:.05rem .45rem; border-radius:4px; letter-spacing:0}
+h1,h2{font-family:var(--f-display); font-weight:700; line-height:1.12; margin:0; text-wrap:balance; letter-spacing:-.01em}
+h1{font-size:clamp(2.1rem, 4.8vw, 4.1rem)}
+h2{font-size:clamp(1.5rem, 2.8vw, 2.35rem)}
+h3{font-size:1.12rem; margin:0 0 .4rem; font-weight:700}
+p{margin:0}
+.lead{font-size:1.25rem; max-width:50rem; color:var(--muted)}
+.lead b,.lead strong{color:var(--ink)}
+.mk{background:linear-gradient(transparent 58%, var(--hl) 58% 92%, transparent 92%); padding-inline:.1em}
+code.i{font-family:var(--f-code); font-size:.9em; background:var(--blue-soft); padding:.05em .35em; border-radius:4px; white-space:nowrap}
+.cols{display:grid; gap:1.3rem; grid-template-columns:repeat(auto-fit, minmax(min(100%, 25rem), 1fr)); align-items:start}
+.cols > *{min-width:0}
+.cols.wide-left{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}
+@media (max-width: 900px){ .cols.wide-left{grid-template-columns:1fr} }
+.stack{display:flex; flex-direction:column; gap:.9rem; min-width:0}
+.card{background:var(--surface); border:1px solid var(--rule); border-radius:14px; padding:1rem 1.2rem}
+.tag{display:inline-flex; align-self:flex-start; align-items:center; gap:.4rem; font-size:.74rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; background:var(--mark); color:var(--mark-ink); padding:.15rem .55rem; border-radius:999px}
+.tag.react{background:var(--blue); color:var(--surface)}
+ul.clean{margin:0; padding-left:1.2rem; display:flex; flex-direction:column; gap:.35rem; font-size:1.05rem}
+.rule{background:var(--surface); border:1px solid var(--rule); border-radius:12px; padding:.75rem 1rem; font-size:1rem}
+.rule b{display:block; font-family:var(--f-code); font-size:1.05rem; margin-bottom:.15rem}
+.rule.react{border-color:var(--blue); background:var(--blue-soft)}
+.rule.react b{color:var(--blue)}
+.small-note{color:var(--muted); font-size:.92rem}
+
+/* ---------- code ---------- */
+.code{margin:0; background:var(--code-bg); color:var(--code-fg); font-family:var(--f-code); font-size:1rem; line-height:1.6; padding:.75rem 0; overflow-x:auto; counter-reset:ln}
+.code code{display:block; min-width:max-content}
+.ln{display:block; white-space:pre; padding:0 1.1rem 0 0; transition:background .2s, opacity .2s}
+.ln::before{counter-increment:ln; content:counter(ln); display:inline-block; width:2.5rem; padding-right:.9rem; text-align:right; color:var(--code-dim); user-select:none}
+.ln.on{background:var(--code-line); box-shadow:inset 5px 0 var(--mark)}
+.t-kw{color:var(--c-kw)} .t-str{color:var(--c-str)} .t-num{color:var(--c-num)} .t-fn{color:var(--c-fn)} .t-com{color:var(--code-dim); font-style:italic} .t-fx{color:var(--c-fx)} .t-tag{color:var(--c-tag)} .t-op{color:var(--c-kw); font-weight:600}
+.runner{border-radius:14px; overflow:hidden; border:1px solid var(--code-line); background:var(--code-bg); display:flex; flex-direction:column; min-width:0}
+.code-head{display:flex; align-items:center; gap:.5rem; padding:.5rem .7rem .5rem 1rem; background:var(--console-bg); color:var(--code-fg); flex-wrap:wrap}
+.file{font-family:var(--f-code); font-size:.85rem; color:var(--code-dim)}
+.live-badge{font-size:.7rem; letter-spacing:.06em; text-transform:uppercase; color:var(--c-fn); border:1px solid var(--c-fn); border-radius:999px; padding:0 .45rem}
+.spacer{flex:1}
+.edit{display:block; width:100%; min-height:8rem; resize:vertical; border:0; margin:0; padding:.75rem 1rem .75rem 3.4rem; background:var(--code-bg); color:var(--code-fg); font-family:var(--f-code); font-size:1rem; line-height:1.6; tab-size:2; white-space:pre; overflow-x:auto; box-shadow:inset 3px 0 var(--mark)}
+.console{background:var(--console-bg); color:var(--code-fg); font-family:var(--f-code); font-size:1rem; padding:.65rem 1rem .85rem; border-top:1px solid var(--code-line); min-height:3.8rem}
+.console-label{font-family:var(--f-body); font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--code-dim); margin-bottom:.3rem}
+.console.tall{max-height:15rem; overflow-y:auto}
+.out{white-space:pre-wrap; word-break:break-word; animation:type .18s ease-out; padding-left:1rem; text-indent:-1rem}
+.out::before{content:"› "; color:var(--code-dim)}
+.out.err{color:var(--c-err)}
+.out.err::before{content:"✕ "}
+.out.hint{color:var(--code-dim); font-family:var(--f-body); font-style:italic}
+.out.hint::before,.out.ph::before{content:""}
+.out.ph{color:var(--code-dim)}
+@keyframes type{from{opacity:0; transform:translateX(-4px)} to{opacity:1; transform:none}}
+.verdict{font-family:var(--f-body); font-weight:600; padding:.55rem 1rem; border-top:1px solid var(--code-line)}
+.verdict.ok{background:var(--ok-soft); color:var(--ok)}
+.verdict.no{background:var(--err-soft); color:var(--err)}
+
+/* ---------- buttons ---------- */
+.btn{font-weight:600; font-size:1rem; padding:.5em 1em; border-radius:9px; border:2px solid var(--ink); background:var(--surface); color:var(--ink); cursor:pointer; white-space:nowrap}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:none}
+.btn:disabled{opacity:.4; cursor:default; transform:none}
+.btn.primary{background:var(--mark); color:var(--mark-ink); border-color:var(--mark-ink)}
+.btn.sm{font-size:.84rem; padding:.32em .75em}
+.code-head .btn{border-color:var(--mark)}
+.code-head .btn:not(.primary){background:transparent; color:var(--code-fg); border-color:var(--code-dim)}
+.btn-row{display:flex; flex-wrap:wrap; gap:.6rem; align-items:center}
+
+/* ---------- footer ---------- */
+.bottom{display:flex; align-items:center; gap:.8rem; padding-block:.55rem; background:var(--surface); border-top:1px solid var(--rule); flex-wrap:wrap}
+.count{font-variant-numeric:tabular-nums; color:var(--muted); font-size:.9rem; flex:1; min-width:8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.count b{color:var(--ink)}
+kbd{font-family:var(--f-code); font-size:.8em; border:1px solid var(--rule); border-bottom-width:2px; border-radius:4px; padding:0 .3em; background:var(--bg)}
+
+/* ---------- notes ---------- */
+.note{display:none; border-top:2px dashed var(--rule); padding-top:.9rem; color:var(--muted); font-size:1rem; max-width:62rem}
+.note b:first-child{color:var(--blue); text-transform:uppercase; letter-spacing:.06em; font-size:.8rem; margin-right:.4rem}
+body.notes .note{display:block}
+
+/* ---------- title / plan ---------- */
+.hero{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.05fr); gap:2.2rem; align-items:center}
+@media (max-width: 960px){ .hero{grid-template-columns:1fr} }
+.hero h1 .js{background:linear-gradient(transparent 60%, var(--mark) 60% 94%, transparent 94%)}
+.keys{display:flex; flex-wrap:wrap; gap:.4rem 1.2rem; color:var(--muted); font-size:.95rem}
+.plan{display:flex; flex-direction:column; gap:.2rem}
+.plan-row{display:grid; grid-template-columns:2.2rem 8.5rem 5.8rem 1fr; gap:.8rem; align-items:center; text-align:left; border:0; border-bottom:1px solid var(--rule); background:none; padding:.4rem .2rem; cursor:pointer; font-size:1rem}
+.plan-row:hover{background:var(--blue-soft)}
+.plan-row .n{font-family:var(--f-display); font-weight:700; color:var(--blue)}
+.plan-row .nm{font-weight:700}
+.plan-row .mn{font-family:var(--f-code); font-size:.88rem; color:var(--muted)}
+.plan-row .ds{color:var(--muted); min-width:0}
+@media (max-width: 640px){ .plan-row{grid-template-columns:1.8rem 1fr auto} .plan-row .ds{grid-column:2 / -1} }
+
+/* ---------- decoder ---------- */
+.dec .code{font-size:.86rem; line-height:1.45}
+.rule code.i{white-space:normal; overflow-wrap:anywhere}
+.cc{border-bottom:2px dotted var(--code-dim); border-radius:2px; transition:background .2s, color .2s}
+.dec.all .cc{border-bottom-color:var(--mark)}
+.cc.on{background:var(--mark); color:var(--mark-ink); border-bottom-color:transparent; box-shadow:0 0 0 2px var(--mark)}
+.cchips{display:flex; flex-wrap:wrap; gap:.45rem}
+.cchip{font-size:.92rem; font-weight:600; padding:.35em .8em; border-radius:999px; border:2px solid var(--rule); background:var(--surface); cursor:pointer}
+.cchip:hover{border-color:var(--ink)}
+.cchip.on{background:var(--mark); color:var(--mark-ink); border-color:var(--mark-ink)}
+.cchip small{font-weight:500; color:var(--muted); margin-left:.3rem}
+.cchip.on small{color:var(--mark-ink)}
+.csay{font-size:1.12rem; min-height:5.5rem; padding:.8rem 1rem; background:var(--surface); border:1px solid var(--rule); border-radius:12px}
+
+/* ---------- facts, quiz, options ---------- */
+.opts{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap:.6rem}
+.opt{display:flex; gap:.8rem; align-items:center; text-align:left; font-size:1.05rem; padding:.65rem .9rem; border-radius:12px; border:2px solid var(--rule); background:var(--surface)}
+.opt .k{font-family:var(--f-display); font-weight:700; font-size:1.2rem; width:2.1rem; height:2.1rem; display:grid; place-items:center; border-radius:50%; background:var(--blue-soft); color:var(--ink); flex:none}
+.opt code{font-family:var(--f-code)}
+.opt.right{border-color:var(--ok); background:var(--ok-soft)}
+.opt.right .k{background:var(--ok); color:var(--surface)}
+.opt.dim{opacity:.4}
+.why{font-size:1.08rem; padding:.7rem 1rem; border-radius:10px; background:var(--ok-soft); color:var(--ink)}
+.quiz{display:flex; flex-direction:column; gap:.9rem}
+.quiz-top{display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap}
+.quiz-q{font-size:1.35rem; font-weight:600}
+.qdots{display:flex; gap:.35rem}
+.qdots i{width:.7rem; height:.7rem; border-radius:50%; background:var(--rule)}
+.qdots i.on{background:var(--mark); box-shadow:0 0 0 1.5px var(--mark-ink)}
+
+/* ---------- stepper (function forms, reference) ---------- */
+.say{font-size:1.1rem; min-height:3.4rem; padding:.7rem 1rem; background:var(--surface); border-radius:10px; border:1px solid var(--rule)}
+.dots{display:flex; gap:.35rem; align-items:center}
+.dots i{width:.6rem; height:.6rem; border-radius:50%; background:var(--rule)}
+.dots i.on{background:var(--blue)}
+
+/* ---------- array machine ---------- */
+.arr-in{display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; font-family:var(--f-code); font-size:1.15rem}
+.arr-in input{width:14rem; max-width:60vw; font-family:var(--f-code); font-size:1.1rem; padding:.2rem .45rem; border-radius:8px; border:2px solid var(--ink); background:var(--surface)}
+.mbtns{display:flex; flex-wrap:wrap; gap:.4rem}
+.mbtns .btn{font-family:var(--f-code); font-size:.86rem; padding:.3em .65em; border-width:1.5px}
+.mbtns .btn.on{background:var(--mark); color:var(--mark-ink); border-color:var(--mark-ink)}
+.arow{display:flex; flex-wrap:wrap; gap:.6rem; align-items:flex-start}
+.ach{display:flex; flex-direction:column; align-items:center; gap:.25rem; min-width:3.2rem}
+.ach small{font-family:var(--f-code); font-size:.82rem; color:var(--muted); white-space:nowrap}
+.chip{font-family:var(--f-code); font-size:1.25rem; min-width:2.8rem; text-align:center; padding:.3rem .55rem; border-radius:8px; background:var(--blue-soft); border:2px solid var(--blue); color:var(--ink)}
+.chip.keep{border-color:var(--ok); background:var(--ok-soft)}
+.chip.drop{opacity:.35; text-decoration:line-through}
+.chip.hit{background:var(--mark); color:var(--mark-ink); border-color:var(--mark-ink)}
+.chip.skip{opacity:.35; border-style:dashed}
+.res{display:flex; flex-wrap:wrap; gap:.8rem; align-items:center; padding:.8rem 1rem; border:2px dashed var(--ink); border-radius:12px}
+.res .lbl{font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:700}
+.res .val{font-family:var(--f-code); font-size:1.5rem; font-weight:600; word-break:break-word}
+.facts2{display:flex; flex-wrap:wrap; gap:.5rem}
+.facts2 span{font-size:.9rem; padding:.2rem .6rem; border-radius:999px; border:1px solid var(--rule); background:var(--surface)}
+.facts2 span.y{border-color:var(--ok); color:var(--ok)}
+
+/* ---------- destructuring ---------- */
+.objbox{font-family:var(--f-code); font-size:1.1rem; background:var(--surface); border:2px solid var(--ink); border-radius:12px; padding:.8rem 1rem; display:flex; flex-direction:column; gap:.3rem}
+.kbtn{display:flex; gap:.6rem; align-items:center; text-align:left; font-family:var(--f-code); font-size:1.05rem; padding:.3rem .6rem; border-radius:8px; border:2px solid transparent; background:none; cursor:pointer}
+.kbtn:hover{border-color:var(--rule)}
+.kbtn.on{background:var(--mark); color:var(--mark-ink); border-color:var(--mark-ink)}
+.kbtn.ghost{color:var(--muted); font-style:italic}
+.vars{display:flex; flex-wrap:wrap; gap:1.2rem .8rem; padding-top:.8rem}
+.vbox{min-width:7rem; border:2.5px solid var(--ink); border-top-width:6px; border-radius:4px 4px 12px 12px; background:var(--surface); padding:.85rem .8rem .45rem; position:relative; font-family:var(--f-code); font-size:1.2rem; font-weight:600}
+.vbox .vn{position:absolute; top:-.95rem; left:.5rem; font-size:.9rem; background:var(--mark); color:var(--mark-ink); padding:0 .4rem; border-radius:4px}
+.vbox.undef{color:var(--muted); font-style:italic; font-weight:400}
+
+/* ---------- reference diagram ---------- */
+.memory{display:grid; grid-template-columns:auto 1fr; gap:.8rem 1.6rem; align-items:start; padding:1.2rem 1rem 1rem; border:2px dashed var(--rule); border-radius:14px; position:relative; min-height:9rem}
+.memory::before{content:"Санах ой"; position:absolute; top:-.75rem; left:1rem; background:var(--bg); padding:0 .5rem; font-size:.78rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+.memcol{display:flex; flex-direction:column; gap:.6rem}
+.memcol h4{margin:0; font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+.vref{display:flex; align-items:center; gap:.5rem; font-family:var(--f-code); font-size:1.15rem}
+.vref b{min-width:2rem; padding:.15rem .5rem; border:2px solid var(--ink); border-radius:6px; background:var(--surface); text-align:center}
+.pill{font-family:var(--f-code); font-size:.85rem; font-weight:700; padding:.05rem .45rem; border-radius:999px; color:var(--mark-ink)}
+.pill.h1{background:var(--blue-soft); color:var(--ink); border:2px solid var(--blue)}
+.pill.h2{background:var(--mark); border:2px solid var(--mark-ink)}
+.hbox{display:flex; align-items:center; gap:.6rem; font-family:var(--f-code); font-size:1.2rem; padding:.45rem .7rem; border-radius:10px; border:2px solid var(--blue); background:var(--surface)}
+.hbox.h2{border-color:var(--mark-ink); box-shadow:inset 6px 0 var(--mark)}
+
+/* ---------- truthy ---------- */
+.tgrid{display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr)); gap:.55rem}
+.tcard{display:flex; flex-direction:column; gap:.2rem; align-items:flex-start; text-align:left; padding:.55rem .75rem; border-radius:10px; border:2px solid var(--rule); background:var(--surface); cursor:pointer}
+.tcard code{font-family:var(--f-code); font-size:1.15rem; font-weight:600}
+.tcard small{font-size:.82rem; color:var(--muted); font-family:var(--f-code)}
+.tcard .tv{font-size:.85rem; font-weight:700}
+.tcard.T{border-color:var(--ok); background:var(--ok-soft)}
+.tcard.F{border-color:var(--err); background:var(--err-soft)}
+.tcard.T .tv{color:var(--ok)} .tcard.F .tv{color:var(--err)}
+
+/* ---------- conditional rendering ---------- */
+.ctrls{display:flex; flex-wrap:wrap; gap:.8rem 1.4rem; align-items:center}
+.ctrls label{display:flex; align-items:center; gap:.5rem; font-family:var(--f-code); font-size:1.05rem}
+.ctrls input[type=text]{width:9rem; font-family:var(--f-code); font-size:1.05rem; padding:.2rem .45rem; border-radius:8px; border:2px solid var(--ink); background:var(--surface)}
+.ctrls input[type=checkbox]{width:1.3rem; height:1.3rem; accent-color:var(--blue)}
+.stepper{display:flex; align-items:center; gap:.3rem}
+.stepper output{font-family:var(--f-code); font-size:1.3rem; font-weight:700; min-width:2rem; text-align:center}
+.screen{border:2px solid var(--ink); border-radius:12px; overflow:hidden; background:var(--surface)}
+.screen-bar{display:flex; gap:.35rem; align-items:center; padding:.4rem .7rem; border-bottom:1px solid var(--rule); background:var(--bg); font-size:.8rem; color:var(--muted)}
+.screen-bar i{width:.6rem; height:.6rem; border-radius:50%; background:var(--rule)}
+.screen-body{display:flex; flex-direction:column; gap:.55rem; padding:1rem}
+.srow{display:grid; grid-template-columns:3rem 1fr; gap:.6rem; align-items:center; font-size:1.1rem}
+.srow .ln-ref{font-family:var(--f-code); font-size:.8rem; color:var(--muted)}
+.srow .nothing{color:var(--muted); font-style:italic; font-size:.95rem}
+.srow .ui-btn{justify-self:start; font-weight:600; padding:.3rem .9rem; border-radius:8px; background:var(--blue); color:var(--surface)}
+.srow .ui-badge{justify-self:start; font-weight:600; padding:.2rem .7rem; border-radius:999px; background:var(--mark); color:var(--mark-ink)}
+.srow .bug{justify-self:start; font-family:var(--f-code); font-weight:700; font-size:1.3rem; color:var(--err); border:2px dashed var(--err); padding:0 .5rem; border-radius:6px}
+
+/* ---------- cheat / methods / checklist ---------- */
+.sheet{display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); gap:.1rem 1.6rem}
+.sheet div{display:flex; flex-direction:column; padding:.5rem 0; border-bottom:1px solid var(--rule)}
+.sheet code{font-family:var(--f-code); font-weight:600; font-size:1rem; color:var(--blue)}
+.sheet span{color:var(--muted)}
+.mrow{display:grid; grid-template-columns:minmax(0, 12rem) minmax(0, 1fr); gap:.6rem; padding:.3rem 0; border-bottom:1px solid var(--rule); font-size:.98rem}
+.mrow code{font-family:var(--f-code); font-weight:600; color:var(--blue); word-break:break-word}
+.mrow span{color:var(--muted)}
+.checklist{display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 18rem), 1fr)); gap:.5rem}
+.checklist label{display:flex; gap:.6rem; align-items:center; padding:.5rem .7rem; border:1.5px solid var(--rule); border-radius:10px; background:var(--surface); font-size:1rem; cursor:pointer}
+.checklist input{width:1.2rem; height:1.2rem; accent-color:var(--ok); flex:none}
+.checklist label:has(input:checked){border-color:var(--ok); background:var(--ok-soft)}
+
+@media (max-width: 760px){
+  .seg-l{display:none}
+  .brand small{display:none}
+  .top{gap:.7rem}
+  .timer-t{min-width:0}
+  .bottom .hide-sm{display:none}
+}
+</style>
+
+<div class="app">
+  <header class="top gutter">
+    <div class="brand"><span class="js">JS</span> → React <small>12-р анги</small></div>
+    <nav class="rail" id="rail" aria-label="Хичээлийн хэсгүүд"></nav>
+    <div class="timer" id="timer">
+      <span class="timer-t" id="timer-t">00:00 <small>/ 80</small></span>
+      <button class="icon-btn" id="timer-go" type="button" title="Цаг эхлүүлэх / зогсоох (T)">Эхлэх</button>
+      <button class="icon-btn" id="timer-reset" type="button" title="Цагийг 0 болгох">0</button>
+    </div>
+  </header>
+
+  <main class="stage gutter" id="stage">
+
+<!-- ===================== TITLE ===================== -->
+<section class="slide" data-sec="0" data-title="Нүүр">
+  <div class="hero">
+    <div class="stack">
+      <div class="eyebrow"><span>12-р анги · React-ын өмнөх сэргээлт · 80 минут</span></div>
+      <h1><span class="js">JavaScript</span> сэргээлт</h1>
+      <p class="lead">React бол шинэ хэл биш. React код <b>90% нь энгийн JavaScript</b>. Өнөөдөр тэр 90%-ийг сэргээнэ.</p>
+      <div class="keys">
+        <span><kbd>→</kbd> <kbd>Space</kbd> дараах</span>
+        <span><kbd>←</kbd> өмнөх</span>
+        <span><kbd>N</kbd> багшийн тэмдэглэл</span>
+        <span><kbd>F</kbd> бүтэн дэлгэц</span>
+        <span><kbd>T</kbd> цаг</span>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="runner" data-ex="hook"></div>
+      <p class="small-note">Код бүрийг «▶ Ажиллуулах» дарж шууд ажиллуулна. «Засах» дарвал кодыг өөрчилж болно.</p>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Сурагчид компьютертэй бол энэ хуудасны холбоосыг өгч, өөрсдөө код засаж ажиллуулах боломжтой. Компьютергүй бол «Таамагла» кодууд дээр хариугаа цаасан дээр бичүүлнэ. Удирдлага: → / ← эсвэл Space, N тэмдэглэл, F бүтэн дэлгэц, T цаг.</aside>
+</section>
+
+<section class="slide" data-sec="0" data-title="Хичээлийн төлөвлөгөө">
+  <div class="eyebrow"><span>Багшид · Хичээлийн төлөвлөгөө</span></div>
+  <h2>80 минут, 11 хэсэг</h2>
+  <div class="cols wide-left">
+    <div class="plan" id="plan"></div>
+    <div class="stack">
+      <div class="card">
+        <h3>Хичээлийн зорилго</h3>
+        <ul class="clean">
+          <li>React кодонд байнга гардаг JS бичиглэлийг (arrow, destructuring, spread, map, ?? ба &amp;&amp;, import) таньж уншина.</li>
+          <li>Массив, объектыг <b>өөрчлөхгүйгээр</b> шинэчлэх (immutable) аргыг ойлгоно.</li>
+          <li>async/await-ийн гүйцэтгэх дарааллыг таамаглана.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Арга</h3>
+        <p>Код бүрийн өмнө <b>«Таамагла»</b>: хариугаа бичээд дараа нь ажиллуулж шалгана. Ногоон «React» шошготой карт нь тухайн ойлголт React-д хаана гарч ирэхийг харуулна.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Мөр дээр дарвал тухайн хэсэг рүү шилжинэ. Дээд талын шугамын хэсэг бүрийн өргөн нь минуттай пропорциональ. Цаг хоцорвол «Объект», «Модуль» хэсгийг товчил. Массив (map, filter) ба Spread хоёрыг алгасаж болохгүй: React-д хамгийн их хэрэглэгдэнэ.</aside>
+</section>
+
+<!-- ===================== 1. INTRO ===================== -->
+<section class="slide" data-sec="1" data-title="Энэ кодыг уншиж чадах уу?">
+  <h2>Энэ React кодыг уншиж чадах уу?</h2>
+  <p class="lead">Ойлголт дээр дарвал кодонд хаана байгаа нь тодорно. Хичээлийн төгсгөлд энэ кодын <span class="mk">мөр бүрийг</span> тайлбарладаг болно.</p>
+  <div class="widget" data-widget="decode"></div>
+  <aside class="note"><b>Багшид</b>Сурагчдаас асуу: «Энэ кодын аль хэсгийг ойлгохгүй байна вэ?» Гараа өргүүлж, хамгийн олон хүн ойлгохгүй байгаа ойлголтыг тэмдэглээд, тухайн хэсэгт илүү цаг гарга. «Бүгдийг» товч бүх ойлголтыг зэрэг тодруулна.</aside>
+</section>
+
+<!-- ===================== 2. VARIABLES ===================== -->
+<section class="slide" data-sec="2" data-title="let ба const">
+  <h2><code class="i">const</code>, <code class="i">let</code>, <s style="color:var(--muted)">var</s></h2>
+  <div class="cols">
+    <div class="runner" data-ex="constlet"></div>
+    <div class="stack">
+      <div class="rule"><b>const</b>Дахин оноохгүй. Анхнаасаа <b>const</b> гэж бич.</div>
+      <div class="rule"><b>let</b>Утга нь өөрчлөгдөх үед л (тоолуур, давталт).</div>
+      <div class="rule"><b>var</b>Хуучин. Хэрэглэхгүй.</div>
+      <span class="tag">Таамагла</span>
+      <div class="runner" data-ex="constarr" data-predict></div>
+      <div class="rule react"><b>React</b><code class="i">const [count, setCount] = useState(0)</code> React-д бараг бүх хувьсагч const.</div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Таамаглал: const массивт push хийж болно. const нь «хайрцгийг өөр хайрцгаар солихгүй» гэсэн үг, хайрцган доторх зүйл өөрчлөгдөж болно. Энэ нь 7-р хэсгийн (лавлагаа) суурь.</aside>
+</section>
+
+<section class="slide" data-sec="2" data-title="Төрөл, template literal">
+  <h2>Өгөгдлийн төрөл ба <code class="i">`${ }`</code></h2>
+  <div class="cols">
+    <div class="stack">
+      <div class="runner" data-ex="types"></div>
+      <p class="small-note"><code class="i">typeof null</code> нь «object» гэж гардаг нь JS-ийн 1995 оны алдаа. Массив мөн «object» тул <code class="i">Array.isArray(x)</code>-ээр шалгана.</p>
+    </div>
+    <div class="stack">
+      <div class="runner" data-ex="tmpl"></div>
+      <span class="tag">Таамагла</span>
+      <div class="runner" data-ex="coerce" data-predict></div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Template literal: backtick (`) тэмдэг, гарын зүүн дээд буланд, 1-ийн зүүн талд байдаг. Таамаглал: "5" + 3 = "53" (текст залгана), "5" - 3 = 2 (хасах нь зөвхөн тоонд), 5 + 3 + "5" = "85" (зүүнээс баруун тийш).</aside>
+</section>
+
+<!-- ===================== 3. FUNCTIONS ===================== -->
+<section class="slide" data-sec="3" data-title="Arrow функц">
+  <h2>Функцийн 5 бичиглэл, нэг үр дүн</h2>
+  <div class="cols">
+    <div class="widget" data-widget="forms"></div>
+    <div class="runner" data-ex="funcs"></div>
+  </div>
+  <aside class="note"><b>Багшид</b>Алхам бүрт «Юу хасагдсан бэ?» гэж асуу: function үг, return ба { }, хаалт. Анхдагч утга (name = "найз") нь React-ийн props-д ч ажиллана.</aside>
+</section>
+
+<section class="slide" data-sec="3" data-title="Функц = утга">
+  <h2>Функц бол утга: дамжуулж болно</h2>
+  <div class="cols">
+    <div class="stack">
+      <div class="runner" data-ex="callback"></div>
+      <div class="rule react"><b>React</b><code class="i">onClick={add}</code> функцийг дамжуулна. <code class="i">onClick={add()}</code> гэвэл дэлгэц зурах үед л шууд дуудчихна!</div>
+    </div>
+    <div class="stack">
+      <span class="tag">Таамагла 1</span>
+      <div class="runner" data-ex="callnow" data-predict></div>
+      <span class="tag">Таамагла 2 · Урхи</span>
+      <div class="runner" data-ex="objret" data-predict></div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Таамаглал 1: sayHi() гэж дуудахад «Сайн уу!» шууд хэвлэгдээд undefined буцаана. Таамаглал 2: { } нь функцийн бие гэж уншигдана. Объект буцаахдаа ({ }) хаалтанд хийнэ.</aside>
+</section>
+
+<!-- ===================== 4. OBJECTS ===================== -->
+<section class="slide" data-sec="4" data-title="Объект">
+  <h2>Объект: түлхүүр ба утга</h2>
+  <div class="cols">
+    <div class="runner" data-ex="obj"></div>
+    <div class="stack">
+      <div class="runner" data-ex="short"></div>
+      <div class="rule"><b>{ name, age }</b>Хувьсагчийн нэр ба түлхүүр ижил бол нэг удаа бичнэ: <code class="i">{ name: name }</code> → <code class="i">{ name }</code>.</div>
+      <div class="rule react"><b>React</b>props, state, API-аас ирэх өгөгдөл бүгд объект.</div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>student const боловч skills-д push хийж, age нэмж болно (const = хайрцаг солихгүй). Object.keys/entries нь объектыг массив болгож, map хийх боломж олгоно.</aside>
+</section>
+
+<!-- ===================== 5. ARRAYS ===================== -->
+<section class="slide" data-sec="5" data-title="Массивын машин">
+  <h2>Массивын аргууд: машинаар үз</h2>
+  <div class="widget" data-widget="arr"></div>
+  <aside class="note"><b>Багшид</b>Товч бүрийн өмнө үр дүнг таамаглуул. Гол санаа: map, filter, slice нь ШИНЭ массив буцаана, эх массив өөрчлөгдөхгүй. find нь эхний олдсоныг л буцаагаад зогсдог. reduce-ийн дотор нийлбэр хэрхэн хуримтлагдахыг харуул.</aside>
+</section>
+
+<section class="slide" data-sec="5" data-title="map, filter, find, reduce">
+  <h2>Объекттой массив: React-ийн өдөр тутмын өгөгдөл</h2>
+  <div class="cols wide-left">
+    <div class="runner" data-ex="products"></div>
+    <div class="stack">
+      <div class="runner" data-ex="lis"></div>
+      <div class="rule react"><b>React</b><code class="i">{fruits.map((f) =&gt; &lt;li key={f}&gt;{f}&lt;/li&gt;)}</code> яг ижил санаа. key нь давтагдашгүй байх ёстой.</div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Ажиллуулахаас өмнө 4 мөрийн гаралтыг таамаглуул. Хоёр дахь жишээ JSX-гүйгээр map нь HTML мөр үүсгэж байгааг харуулна. JSX бол энэ санааны илүү цэвэр бичиглэл.</aside>
+</section>
+
+<section class="slide" data-sec="5" data-title="Дасгал: map, filter">
+  <h2>Дасгал: өөрөө бич</h2>
+  <div class="cols">
+    <div class="stack">
+      <p class="lead" style="font-size:1.1rem"><b>1.</b> Үнэ бүрийг <b>2 дахин</b> нэмэгдүүлсэн шинэ массив гарга. Хүлээгдэж буй: <code class="i">[2000, 5000, 800]</code></p>
+      <div class="runner" data-ex="ch1" data-check></div>
+    </div>
+    <div class="stack">
+      <p class="lead" style="font-size:1.1rem"><b>2.</b> 60 ба түүнээс дээш оноотой сурагчдын <b>нэрсийг</b> гарга. Хүлээгдэж буй: <code class="i">['Анар', 'Сараа']</code></p>
+      <div class="runner" data-ex="ch2" data-check></div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Компьютертэй бол сурагчид өөрсдөө «Шалгах» дарна. Компьютергүй бол цаасан дээр бичүүлээд, 1–2 сурагчийн хариуг самбарт бичиж, та кодонд оруулж шалга. 2-р дасгалд filter, map-ийг гинжлэн бичнэ: students.filter(...).map(...).</aside>
+</section>
+
+<!-- ===================== 6. DESTRUCTURING ===================== -->
+<section class="slide" data-sec="6" data-title="Объект задлах">
+  <h2>Задлах (destructuring): объектоос</h2>
+  <div class="cols">
+    <div class="widget" data-widget="destr"></div>
+    <div class="runner" data-ex="destr1"></div>
+  </div>
+  <aside class="note"><b>Багшид</b>Түлхүүр дээр дарж сонгоход код болон хувьсагчид шууд өөрчлөгдөнө. email объектод байхгүй тул undefined гарна. Код дээр: city: home нь нэр солих, phone = "байхгүй" нь анхдагч утга.</aside>
+</section>
+
+<section class="slide" data-sec="6" data-title="Массив задлах, useState">
+  <h2>Массив задлах ба <code class="i">useState</code>-ийн нууц</h2>
+  <div class="cols wide-left">
+    <div class="runner" data-ex="destr2"></div>
+    <div class="stack">
+      <div class="runner" data-ex="props"></div>
+      <div class="rule react"><b>React</b><code class="i">function Card({ title, price })</code>. Компонент props объектыг шууд параметр дээрээ задалдаг.</div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Энэ useState бол жинхэнэ биш, зөвхөн санааг харуулах хувилбар: [утга, утга_солих_функц] массив буцаадаг. Жинхэнэ React setCount дуудахад компонентыг дахин зурдаг. Массивыг байрлалаар нь задалдаг тул нэрийг дуртайгаараа өгнө (count, setCount).</aside>
+</section>
+
+<!-- ===================== 7. SPREAD / IMMUTABILITY ===================== -->
+<section class="slide" data-sec="7" data-title="Лавлагаа">
+  <h2>Хуулбар уу, лавлагаа уу?</h2>
+  <div class="widget" data-widget="ref"></div>
+  <aside class="note"><b>Багшид</b>Хамгийн чухал слайд. 4-р алхмын өмнө зогсоод a юу хэвлэхийг таамаглуул: ихэнх нь [1, 2] гэнэ. b = a нь массивыг хуулахгүй, ижил массив руу заасан хоёр дахь нэр үүсгэнэ. React state-ийг === харьцуулж өөрчлөгдсөн эсэхийг шалгадаг тул push хийвэл «өөрчлөгдөөгүй» гэж үзээд дэлгэцээ шинэчлэхгүй.</aside>
+</section>
+
+<section class="slide" data-sec="7" data-title="Spread ба rest">
+  <h2>Spread <code class="i">...</code> ба rest <code class="i">...</code></h2>
+  <div class="cols">
+    <div class="runner" data-ex="spread"></div>
+    <div class="stack">
+      <div class="runner" data-ex="rest"></div>
+      <div class="rule"><b>Ижил ... хоёр үүрэг</b>Баруун талд (утга) бол <b>задална</b> (spread). Зүүн талд эсвэл параметрт бол <b>цуглуулна</b> (rest).</div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>{ ...user, age: 18 } дээр дараалал чухал: сүүлд бичсэн нь давамгайлна. { age: 18, ...user } гэвэл age 17 хэвээр үлдэнэ. Засаад үзүүлж болно.</aside>
+</section>
+
+<section class="slide" data-sec="7" data-title="State шинэчлэх 3 загвар">
+  <h2>React state шинэчлэх 3 загвар</h2>
+  <div class="cols wide-left">
+    <div class="runner" data-ex="todos"></div>
+    <div class="stack">
+      <div class="rule react"><b>Нэмэх</b><code class="i">[...todos, шинэ]</code></div>
+      <div class="rule react"><b>Устгах</b><code class="i">todos.filter((t) =&gt; t.id !== id)</code></div>
+      <div class="rule react"><b>Засах</b><code class="i">todos.map((t) =&gt; t.id === id ? { ...t, done: true } : t)</code></div>
+      <p class="small-note">Гурвуулаа хуучин массивыг өөрчлөхгүй, шинийг буцаана. push, splice, t.done = true хэрэглэхгүй.</p>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Эдгээр 3 мөрийг сурагчид дэвтэртээ хуулж авах ёстой. Todo, сагс, чат гэх мэт React төсөл бүрт яг ингэж бичнэ.</aside>
+</section>
+
+<!-- ===================== 8. CONDITIONS ===================== -->
+<section class="slide" data-sec="8" data-title="=== ба truthy">
+  <h2><code class="i">===</code> ба truthy / falsy</h2>
+  <div class="cols">
+    <div class="stack">
+      <span class="tag">Таамагла</span>
+      <div class="runner" data-ex="eq" data-predict></div>
+      <div class="rule"><b>Үргэлж ===</b><code class="i">==</code> төрлийг нь хөрвүүлээд харьцуулдаг тул гэнэтийн үр дүн өгнө.</div>
+    </div>
+    <div class="stack">
+      <h3>Энэ утга if дотор үнэн үү? Карт дээр дар</h3>
+      <div class="widget" data-widget="truthy"></div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Falsy утга ердөө 6: false, 0, "", null, undefined, NaN. Бусад бүх зүйл truthy, хоосон массив [] ба хоосон объект {} ч truthy! Картуудыг нэг нэгээр нь таамаглуулаад дар.</aside>
+</section>
+
+<section class="slide" data-sec="8" data-title="?: && ?? ?.">
+  <h2>Богино нөхцөл: <code class="i">? :</code> <code class="i">&amp;&amp;</code> <code class="i">??</code> <code class="i">?.</code></h2>
+  <div class="cols wide-left">
+    <div class="runner" data-ex="short-cond"></div>
+    <div class="stack">
+      <div class="rule"><b>a ? b : c</b>a үнэн бол b, үгүй бол c.</div>
+      <div class="rule"><b>a &amp;&amp; b</b>a үнэн бол b, худал бол a-г өөрийг нь буцаана.</div>
+      <div class="rule"><b>a ?? b</b>a нь null / undefined бол b.</div>
+      <div class="rule"><b>a?.b</b>a байхгүй бол алдаа гаргахгүй, undefined буцаана.</div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Сүүлийн мөр алдаа гаргана. «?. байгаа ба байхгүй мөрийн ялгаа юу вэ?» гэж асуу. API-аас өгөгдөл ирээгүй үед энэ алдаа React-д хамгийн их гардаг.</aside>
+</section>
+
+<section class="slide" data-sec="8" data-title="Нөхцөлт харуулах">
+  <h2>React-д: нөхцөлөөр харуулах</h2>
+  <div class="widget" data-widget="render"></div>
+  <aside class="note"><b>Багшид</b>count-ийг 0 болгоод 8-р мөрийг үзүүл: дэлгэц дээр «0» гарч ирнэ. Учир нь 0 &amp;&amp; ... нь 0 буцаадаг, React тоог дэлгэцэнд зурдаг. Тиймээс count &gt; 0 &amp;&amp; гэж бичнэ. isLoggedIn-ийг сольж тернар операторыг үзүүл.</aside>
+</section>
+
+<!-- ===================== 9. MODULES ===================== -->
+<section class="slide" data-sec="9" data-title="import / export">
+  <h2>Модуль: <code class="i">import</code> ба <code class="i">export</code></h2>
+  <div class="cols">
+    <div class="stack">
+      <div class="runner" data-ex="mathjs" data-file="math.js" data-static></div>
+      <div class="runner" data-ex="appjs" data-file="App.js" data-nolive></div>
+    </div>
+    <div class="stack">
+      <div class="mrow"><code>export default</code><span>Файлд нэг л байна. Импортлохдоо <b>{ }-гүй</b>, дурын нэр өгч болно.</span></div>
+      <div class="mrow"><code>export const / function</code><span>Нэртэй экспорт. Олон байж болно. Импортлохдоо <b>{ }</b> дотор, яг ижил нэрээр.</span></div>
+      <div class="mrow"><code>import x, { a, b }</code><span>Хоёуланг нэг мөрөнд.</span></div>
+      <div class="mrow"><code>from "react"</code><span>Зам биш нэр бол npm сангаас.</span></div>
+      <div class="mrow"><code>from "./math.js"</code><span><code>./</code>-ээр эхэлбэл өөрийн файлаас.</span></div>
+      <div class="rule react"><b>React</b>Компонент бүр тусдаа файл: <code class="i">export default function App()</code> → <code class="i">import App from "./App"</code></div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>import нь зөвхөн модуль файл дотор ажилладаг тул энд урьдчилан бэлдсэн гаралтыг харуулна. Түгээмэл алдаа: default экспортыг { } дотор импортлох, эсвэл нэртэй экспортын нэрийг буруу бичих.</aside>
+</section>
+
+<!-- ===================== 10. ASYNC ===================== -->
+<section class="slide" data-sec="10" data-title="Event loop">
+  <h2>Асинхрон: хэн түрүүлж хэвлэх вэ?</h2>
+  <div class="cols">
+    <div class="stack">
+      <span class="tag">Таамагла · Дарааллыг бич</span>
+      <div class="runner" data-ex="loop" data-predict></div>
+      <div class="rule"><b>Дараалал</b>1) энгийн код дуустал, 2) Promise.then, 3) setTimeout. 0 мс ч гэсэн хүлээнэ.</div>
+    </div>
+    <div class="runner" data-ex="await"></div>
+  </div>
+  <aside class="note"><b>Багшид</b>Таамаглал: 1, 4, 3, 2. Баруун талын жишээнд «Энэ мөр хүлээхгүй!» нь өгөгдлөөс өмнө хэвлэгдэнэ: await зөвхөн async функцийн доторх кодыг хүлээлгэдэг, гаднах код үргэлжилнэ. React-д өгөгдөл ирэх хүртэл «Ачаалж байна...» харуулдгийн учир энэ.</aside>
+</section>
+
+<section class="slide" data-sec="10" data-title="try / catch, fetch">
+  <h2>Алдааг барих: <code class="i">try / catch</code> ба <code class="i">fetch</code></h2>
+  <div class="cols">
+    <div class="runner" data-ex="login"></div>
+    <div class="stack">
+      <div class="runner" data-ex="fetch" data-static></div>
+      <div class="rule react"><b>React</b>Энэ функцийг <code class="i">useEffect</code> дотор дуудаад, үр дүнг <code class="i">setUsers(users)</code>-ээр state-д хадгална.</div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Нууц үгийг сольж засаад ажиллуулж болно. fetch-ийн жишээ энэ хуудсанд ажиллахгүй (гадны сайт руу хандах эрхгүй). Сурагчид өөрийн компьютерийн хөтчийн Console (F12) дээр туршиж болно.</aside>
+</section>
+
+<!-- ===================== 11. WRAP-UP ===================== -->
+<section class="slide" data-sec="11" data-title="Дахин уншъя">
+  <h2>Одоо энэ кодыг уншиж чадах уу?</h2>
+  <div class="widget" data-widget="decode"></div>
+  <aside class="note"><b>Багшид</b>Ойлголт бүрийг нэг сурагчаар тайлбарлуул. Эхний слайдтай харьцуулбал ахиц харагдана.</aside>
+</section>
+
+<section class="slide" data-sec="11" data-title="Сорил">
+  <h2>Сорил: хуруугаараа хариул</h2>
+  <div class="widget" data-widget="quiz"></div>
+  <aside class="note"><b>Багшид</b>«3, 2, 1, үзүүл!» гэхэд бүгд хариугаа хуруугаараа (1–4) зэрэг үзүүлнэ. Хамгийн олон буруу хариулсан асуултын ойлголтыг дахин тайлбарла.</aside>
+</section>
+
+<section class="slide" data-sec="11" data-title="Сануулах хуудас">
+  <h2>React-д бэлэн үү?</h2>
+  <div class="cols wide-left">
+    <div class="sheet">
+      <div><code>const / let</code><span>var хэрэглэхгүй</span></div>
+      <div><code>`Сайн уу, ${name}`</code><span>template literal</span></div>
+      <div><code>(a, b) =&gt; a + b</code><span>arrow функц</span></div>
+      <div><code>onClick={add}</code><span>функц дамжуулах, дуудахгүй</span></div>
+      <div><code>{ name, age }</code><span>объект товчлол</span></div>
+      <div><code>arr.map / filter / find</code><span>шинэ массив / утга буцаана</span></div>
+      <div><code>const { a } = obj</code><span>объект задлах</span></div>
+      <div><code>const [x, setX] = ...</code><span>массив задлах</span></div>
+      <div><code>[...arr, x]  { ...obj }</code><span>шинэ хуулбар (spread)</span></div>
+      <div><code>===  !==</code><span>үргэлж гурван тэнцүү</span></div>
+      <div><code>a ? b : c   a &amp;&amp; b</code><span>нөхцөлт харуулах</span></div>
+      <div><code>a ?? b   a?.b</code><span>байхгүй утгыг зохицуулах</span></div>
+      <div><code>import X, { y } from</code><span>модуль</span></div>
+      <div><code>async / await  try / catch</code><span>асинхрон, алдаа барих</span></div>
+    </div>
+    <div class="stack">
+      <h3>Өөрийгөө шалга</h3>
+      <div class="widget" data-widget="checklist"></div>
+      <div class="card">
+        <h3>Гэрийн даалгавар</h3>
+        <p>Сурагчдын массивыг ашиглан: 1) <code class="i">filter</code>-ээр 18-аас дээш насныхныг ял, 2) <code class="i">map</code>-аар «Нэр (нас)» мөр болго, 3) шинэ сурагчийг <code class="i">[...arr, шинэ]</code>-ээр нэм. Хөтчийн Console (F12) дээр ажиллуул.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Чеклистийг сурагчид өөрсдөө бөглөнө (хөтөч дээр хадгалагдана). Ихэнх нь тэмдэглээгүй мөрийг дараагийн хичээлийн эхэнд 5 минут давтана.</aside>
+</section>
+
+  </main>
+
+  <footer class="bottom gutter">
+    <button class="btn sm" id="prev" type="button">← Өмнөх</button>
+    <span class="count" id="count"></span>
+    <button class="btn sm" id="notes-btn" type="button" aria-pressed="false">Тэмдэглэл <kbd class="hide-sm">N</kbd></button>
+    <button class="btn sm hide-sm" id="fs-btn" type="button">Бүтэн дэлгэц <kbd>F</kbd></button>
+    <button class="btn sm primary" id="next" type="button">Дараах →</button>
+  </footer>
+</div>
+
+<!-- ===================== EXAMPLE SOURCES (plain text, run live when the browser allows it) ===================== -->
+<script type="text/plain" id="ex-hook">
+const skills = ["let/const", "arrow", "map", "spread", "async"];
+const ready = skills.map((s) => `✓ ${s}`);
+
+console.log(`React-д бэлдэх ${skills.length} алхам:`);
+console.log(ready.join("  "));
+</script>
+<script type="text/plain" id="ex-constlet">
+let score = 10;
+score = score + 5;
+console.log(score);
+
+const name = "Сараа";
+name = "Бат";
+console.log(name);
+</script>
+<script type="text/plain" id="ex-constarr">
+const fruits = ["алим"];
+fruits.push("банана");
+console.log(fruits);
+</script>
+<script type="text/plain" id="ex-types">
+console.log(typeof 42);
+console.log(typeof "сайн уу");
+console.log(typeof true);
+console.log(typeof undefined);
+console.log(typeof null);
+console.log(typeof [1, 2]);
+console.log(typeof { a: 1 });
+console.log(typeof (() => {}));
+</script>
+<script type="text/plain" id="ex-tmpl">
+const name = "Тэмүүлэн";
+const age = 17;
+
+console.log("Сайн уу, " + name + "! Чи " + age + " настай.");
+console.log(`Сайн уу, ${name}! Чи ${age} настай.`);
+console.log(`Ирэх жил ${age + 1} нас хүрнэ.`);
+</script>
+<script type="text/plain" id="ex-coerce">
+console.log("5" + 3);
+console.log("5" - 3);
+console.log(5 + 3 + "5");
+</script>
+<script type="text/plain" id="ex-funcs">
+function add(a, b) {
+  return a + b;
+}
+const multiply = (a, b) => a * b;
+const greet = (name = "найз") => `Сайн уу, ${name}!`;
+
+console.log(add(2, 3));
+console.log(multiply(4, 5));
+console.log(greet("Сараа"));
+console.log(greet());
+</script>
+<script type="text/plain" id="ex-callback">
+const shout = (text) => text.toUpperCase() + "!";
+const whisper = (text) => text.toLowerCase() + "...";
+
+function speak(text, style) {
+  return style(text);
+}
+
+console.log(speak("Сайн уу", shout));
+console.log(speak("Сайн уу", whisper));
+</script>
+<script type="text/plain" id="ex-callnow">
+const sayHi = () => console.log("Сайн уу!");
+
+const a = sayHi;
+const b = sayHi();
+
+console.log(typeof a);
+console.log(typeof b);
+</script>
+<script type="text/plain" id="ex-objret">
+const a = () => { id: 1 };
+const b = () => ({ id: 1 });
+
+console.log(a());
+console.log(b());
+</script>
+<script type="text/plain" id="ex-obj">
+const student = {
+  name: "Номин",
+  grade: 12,
+  skills: ["HTML", "CSS"],
+  address: { city: "Дархан" }
+};
+
+console.log(student.name);
+console.log(student.address.city);
+console.log(student["grade"]);
+
+student.skills.push("JS");
+student.age = 17;
+console.log(student);
+</script>
+<script type="text/plain" id="ex-short">
+const name = "Бат";
+const age = 17;
+
+const user = { name, age };
+console.log(user);
+console.log(Object.keys(user));
+console.log(Object.entries(user));
+</script>
+<script type="text/plain" id="ex-products">
+const products = [
+  { id: 1, name: "Бал", price: 500 },
+  { id: 2, name: "Дэвтэр", price: 1500 },
+  { id: 3, name: "Цүнх", price: 45000 },
+  { id: 4, name: "Харандаа", price: 300 }
+];
+
+const names = products.map((p) => p.name);
+const cheap = products.filter((p) => p.price < 1000);
+const bag = products.find((p) => p.id === 3);
+const total = products.reduce((sum, p) => sum + p.price, 0);
+
+console.log(names);
+console.log(cheap.length);
+console.log(bag.name);
+console.log(total);
+</script>
+<script type="text/plain" id="ex-lis">
+const fruits = ["алим", "банана", "усан үзэм"];
+
+const items = fruits.map((f) => `<li>${f}</li>`);
+console.log(items.join("\n"));
+</script>
+<script type="text/plain" id="ex-ch1">
+const prices = [1000, 2500, 400];
+
+// ↓ map ашиглан засаарай
+const doubled = prices;
+
+console.log(doubled);
+</script>
+<script type="text/plain" id="ex-ch1-sol">
+const prices = [1000, 2500, 400];
+
+const doubled = prices.map((p) => p * 2);
+
+console.log(doubled);
+</script>
+<script type="text/plain" id="ex-ch2">
+const students = [
+  { name: "Анар", score: 85 },
+  { name: "Бат", score: 45 },
+  { name: "Сараа", score: 92 },
+  { name: "Дорж", score: 58 }
+];
+
+// ↓ filter, дараа нь map ашиглан засаарай
+const passed = students;
+
+console.log(passed);
+</script>
+<script type="text/plain" id="ex-ch2-sol">
+const students = [
+  { name: "Анар", score: 85 },
+  { name: "Бат", score: 45 },
+  { name: "Сараа", score: 92 },
+  { name: "Дорж", score: 58 }
+];
+
+const passed = students
+  .filter((s) => s.score >= 60)
+  .map((s) => s.name);
+
+console.log(passed);
+</script>
+<script type="text/plain" id="ex-destr1">
+const user = { name: "Сараа", age: 17, city: "Эрдэнэт" };
+
+const { name, age } = user;
+console.log(name, age);
+
+const { city: home, phone = "байхгүй" } = user;
+console.log(home, phone);
+</script>
+<script type="text/plain" id="ex-destr2">
+const colors = ["улаан", "ногоон", "цэнхэр"];
+const [first, second] = colors;
+console.log(first, second);
+
+// useState-ийн санааг харуулах хялбар хувилбар
+function useState(initial) {
+  let value = initial;
+  const setValue = (v) => {
+    value = v;
+    console.log("шинэ утга:", v);
+  };
+  return [value, setValue];
+}
+
+const [count, setCount] = useState(0);
+console.log(count);
+setCount(5);
+</script>
+<script type="text/plain" id="ex-props">
+function Card({ title, price = 0 }) {
+  return `${title}: ${price}₮`;
+}
+
+console.log(Card({ title: "Ном", price: 12000 }));
+console.log(Card({ title: "Үнэгүй зурагт хуудас" }));
+</script>
+<script type="text/plain" id="ex-spread">
+const nums = [1, 2, 3];
+const more = [...nums, 4, 5];
+console.log(more);
+
+const user = { name: "Бат", age: 17 };
+const older = { ...user, age: 18 };
+console.log(user);
+console.log(older);
+
+console.log(Math.max(...nums));
+</script>
+<script type="text/plain" id="ex-rest">
+function sum(...numbers) {
+  return numbers.reduce((s, n) => s + n, 0);
+}
+console.log(sum(1, 2, 3));
+console.log(sum(5, 10, 15, 20));
+
+const student = { name: "Сараа", age: 17, city: "Ховд" };
+const { name, ...rest } = student;
+console.log(name);
+console.log(rest);
+</script>
+<script type="text/plain" id="ex-todos">
+let todos = [
+  { id: 1, text: "Даалгавар", done: false },
+  { id: 2, text: "Спорт", done: false }
+];
+
+// нэмэх
+todos = [...todos, { id: 3, text: "Ном унших", done: false }];
+// устгах
+todos = todos.filter((t) => t.id !== 2);
+// засах
+todos = todos.map((t) => (t.id === 1 ? { ...t, done: true } : t));
+
+console.log(todos);
+</script>
+<script type="text/plain" id="ex-eq">
+console.log(5 == "5");
+console.log(5 === "5");
+console.log(0 == false);
+console.log(0 === false);
+</script>
+<script type="text/plain" id="ex-short-cond">
+const user = { name: "Бат", cart: [] };
+
+console.log(user.cart.length > 0 ? "Сагс дүүрэн" : "Сагс хоосон");
+console.log(user.isAdmin && "Админ цэс");
+console.log(user.nickname ?? "Хоч байхгүй");
+console.log(user.address?.city);
+console.log(user.address.city);
+</script>
+<script type="text/plain" id="ex-mathjs">
+export const PI = 3.14;
+
+export function square(x) {
+  return x * x;
+}
+
+export default function add(a, b) {
+  return a + b;
+}
+</script>
+<script type="text/plain" id="ex-appjs">
+import add, { PI, square } from "./math.js";
+
+console.log(add(2, 3));
+console.log(square(4));
+console.log(PI);
+</script>
+<script type="text/plain" id="ex-loop">
+console.log("1. Эхлэл");
+setTimeout(() => console.log("2. Timeout"), 0);
+Promise.resolve().then(() => console.log("3. Promise"));
+console.log("4. Төгсгөл");
+</script>
+<script type="text/plain" id="ex-await">
+// Сервер 1 секундын дараа хариулж буй мэт
+const getStudents = () =>
+  new Promise((resolve) => {
+    setTimeout(() => resolve(["Анар", "Бат", "Сараа"]), 1000);
+  });
+
+async function load() {
+  console.log("Ачаалж байна...");
+  const students = await getStudents();
+  console.log("Ирлээ:", students);
+  console.log(`Нийт ${students.length} сурагч`);
+}
+
+load();
+console.log("Энэ мөр хүлээхгүй!");
+</script>
+<script type="text/plain" id="ex-login">
+const login = (password) =>
+  new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (password === "1234") resolve("Амжилттай нэвтэрлээ");
+      else reject(new Error("Нууц үг буруу"));
+    }, 600);
+  });
+
+async function tryLogin(pw) {
+  try {
+    const msg = await login(pw);
+    console.log("✓", msg);
+  } catch (err) {
+    console.log("✗", err.message);
+  }
+}
+
+tryLogin("0000");
+tryLogin("1234");
+</script>
+<script type="text/plain" id="ex-fetch">
+async function loadUsers() {
+  try {
+    const url = "https://jsonplaceholder.typicode.com/users";
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Сервер: " + res.status);
+    const users = await res.json();
+    console.log(users.map((u) => u.name));
+  } catch (err) {
+    console.log("Алдаа:", err.message);
+  }
+}
+
+loadUsers();
+</script>
+<script type="text/plain" id="ex-todo">
+import { useState } from "react";
+
+export default function TodoList({ title }) {
+  const [todos, setTodos] = useState([]);
+  const [text, setText] = useState("");
+
+  const add = () => {
+    if (!text.trim()) return;
+    setTodos([...todos, { id: Date.now(), text }]);
+    setText("");
+  };
+
+  return (
+    <div>
+      <h2>{title ?? "Миний жагсаалт"}</h2>
+      <input value={text} onChange={(e) => setText(e.target.value)} />
+      <button onClick={add}>Нэмэх</button>
+      {todos.length === 0 && <p>Хоосон байна</p>}
+      <ul>
+        {todos.map((t) => (
+          <li key={t.id}>{t.text}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+</script>
+
+<script>
+(() => {
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("js12-" + k); return v === null ? d : v; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("js12-" + k, v); } catch {} }
+};
+const src = id => { const el = document.getElementById("ex-" + id); return el ? el.textContent.replace(/^\n+|\s+$/g, "") : ""; };
+
+/* ---------------- console formatting (Chrome-like) ---------------- */
+/*FMT-START*/
+function fmt(v, d = 0) {
+  if (typeof v === "string") return d ? `'${v}'` : v;
+  if (typeof v === "number") return Object.is(v, -0) ? "-0" : String(v);
+  if (typeof v === "bigint") return v + "n";
+  if (typeof v === "function") return `ƒ ${v.name || "anonymous"}()`;
+  if (v === null || typeof v !== "object") return String(v);
+  if (v instanceof Error) return `${v.name}: ${v.message}`;
+  if (v instanceof Promise) return "Promise {…}";
+  if (d > 3) return Array.isArray(v) ? "[…]" : "{…}";
+  if (Array.isArray(v)) return `[${v.map(x => fmt(x, d + 1)).join(", ")}]`;
+  const ks = Object.keys(v);
+  if (!ks.length) return "{}";
+  return `{${ks.map(k => `${/^[A-Za-z_$][\w$]*$/.test(k) ? k : `'${k}'`}: ${fmt(v[k], d + 1)}`).join(", ")}}`;
+}
+/*FMT-END*/
+
+/* ---------------- live execution ---------------- */
+let LIVE = false;
+try { LIVE = new Function("return 2")() === 2; } catch { LIVE = false; }
+function execute(code, emit) {
+  const line = (a, extra) => emit(Object.assign({ t: a.map(x => fmt(x)).join(" ") }, extra));
+  const con = { log: (...a) => { line(a); }, info: (...a) => { line(a); }, warn: (...a) => { line(a); }, error: (...a) => { line(a, { err: true }); } };
+  let fn;
+  try { fn = new Function("console", `"use strict";\nreturn (async () => {\n${code}\n})();`); }
+  catch (e) { emit({ t: `Uncaught ${e.name}: ${e.message}`, err: true }); return; }
+  fn(con).catch(e => emit({ t: `Uncaught ${e && e.name ? `${e.name}: ${e.message}` : fmt(e)}`, err: true }));
+}
+
+/* Prepared output, used when the browser blocks live code (and for import examples). d = wait in ms before the line. */
+const E = t => ({ t, err: true });
+/*OUT-START*/
+const OUT = {
+  hook: ["React-д бэлдэх 5 алхам:", "✓ let/const  ✓ arrow  ✓ map  ✓ spread  ✓ async"],
+  constlet: ["15", E("Uncaught TypeError: Assignment to constant variable.")],
+  constarr: ["['алим', 'банана']"],
+  types: ["number", "string", "boolean", "undefined", "object", "object", "object", "function"],
+  tmpl: ["Сайн уу, Тэмүүлэн! Чи 17 настай.", "Сайн уу, Тэмүүлэн! Чи 17 настай.", "Ирэх жил 18 нас хүрнэ."],
+  coerce: ["53", "2", "85"],
+  funcs: ["5", "20", "Сайн уу, Сараа!", "Сайн уу, найз!"],
+  callback: ["САЙН УУ!", "сайн уу..."],
+  callnow: ["Сайн уу!", "function", "undefined"],
+  objret: ["undefined", "{id: 1}"],
+  obj: ["Номин", "Дархан", "12", "{name: 'Номин', grade: 12, skills: ['HTML', 'CSS', 'JS'], address: {city: 'Дархан'}, age: 17}"],
+  short: ["{name: 'Бат', age: 17}", "['name', 'age']", "[['name', 'Бат'], ['age', 17]]"],
+  products: ["['Бал', 'Дэвтэр', 'Цүнх', 'Харандаа']", "2", "Цүнх", "47300"],
+  lis: ["<li>алим</li>\n<li>банана</li>\n<li>усан үзэм</li>"],
+  ch1: ["[1000, 2500, 400]"],
+  "ch1-sol": ["[2000, 5000, 800]"],
+  ch2: ["[{name: 'Анар', score: 85}, {name: 'Бат', score: 45}, {name: 'Сараа', score: 92}, {name: 'Дорж', score: 58}]"],
+  "ch2-sol": ["['Анар', 'Сараа']"],
+  destr1: ["Сараа 17", "Эрдэнэт байхгүй"],
+  destr2: ["улаан ногоон", "0", "шинэ утга: 5"],
+  props: ["Ном: 12000₮", "Үнэгүй зурагт хуудас: 0₮"],
+  spread: ["[1, 2, 3, 4, 5]", "{name: 'Бат', age: 17}", "{name: 'Бат', age: 18}", "3"],
+  rest: ["6", "50", "Сараа", "{age: 17, city: 'Ховд'}"],
+  todos: ["[{id: 1, text: 'Даалгавар', done: true}, {id: 3, text: 'Ном унших', done: false}]"],
+  eq: ["true", "false", "true", "false"],
+  "short-cond": ["Сагс хоосон", "undefined", "Хоч байхгүй", "undefined", E("Uncaught TypeError: Cannot read properties of undefined (reading 'city')")],
+  appjs: ["5", "16", "3.14"],
+  loop: ["1. Эхлэл", "4. Төгсгөл", "3. Promise", "2. Timeout"],
+  await: ["Ачаалж байна...", "Энэ мөр хүлээхгүй!", { t: "Ирлээ: ['Анар', 'Бат', 'Сараа']", d: 1000 }, "Нийт 3 сурагч"],
+  login: [{ t: "✗ Нууц үг буруу", d: 600 }, "✓ Амжилттай нэвтэрлээ"]
+};
+/*OUT-END*/
+
+/* ---------------- syntax highlight ---------------- */
+const KW = new Set("const let var function return if else for of in while do new class extends import export default from as async await try catch finally throw typeof instanceof true false null undefined this break continue switch case".split(" "));
+const TOK = /(\/\/.*$)|(`(?:[^`\\]|\\.)*`?|"(?:[^"\\]|\\.)*"?|'(?:[^'\\]|\\.)*'?)|(\b\d+(?:\.\d+)?\b)|(<\/?[A-Za-z][\w.]*|\/>)|(=>|\.\.\.|===|!==|\?\?|\?\.|&&|\|\|)|([A-Za-z_$Ѐ-ӿ][\w$Ѐ-ӿ]*)|(\s+)|(.)/g;
+function hlLine(line) {
+  let out = "", m;
+  TOK.lastIndex = 0;
+  while ((m = TOK.exec(line)) && m[0] !== "") {
+    const [t, com, str, num, tag, op, id] = m;
+    if (com) out += `<span class="t-com">${esc(com)}</span>`;
+    else if (str) {
+      let h = esc(str);
+      if (str[0] === "`") h = h.replace(/\$\{[^}]*\}/g, x => `<span class="t-fx">${x}</span>`);
+      out += `<span class="t-str">${h}</span>`;
+    }
+    else if (num) out += `<span class="t-num">${num}</span>`;
+    else if (tag) out += `<span class="t-tag">${esc(tag)}</span>`;
+    else if (op) out += `<span class="t-op">${esc(op)}</span>`;
+    else if (id) {
+      if (KW.has(id)) out += `<span class="t-kw">${id}</span>`;
+      else if (line[TOK.lastIndex] === "(") out += `<span class="t-fn">${id}</span>`;
+      else out += id;
+    }
+    else out += esc(t);
+  }
+  return out;
+}
+const codeHTML = code => `<pre class="code"><code>${code.split("\n").map((l, i) =>
+  `<span class="ln" data-n="${i + 1}">${hlLine(l) || " "}</span>`).join("")}</code></pre>`;
+function mark(pre, on = []) { $$(".ln", pre).forEach(el => el.classList.toggle("on", on.includes(+el.dataset.n))); }
+
+/* ---------------- console printing ---------------- */
+function makePrinter(body) {
+  let tok = 0, q = Promise.resolve();
+  return {
+    reset(ph) { tok++; q = Promise.resolve(); body.innerHTML = ph ? `<div class="out ph">${esc(ph)}</div>` : ""; },
+    start() { tok++; q = Promise.resolve(); body.innerHTML = ""; return tok; },
+    push(o, t, gap = 70) {
+      q = q.then(async () => {
+        if (t !== tok) return;
+        const d = document.createElement("div");
+        d.className = "out" + (o.err ? " err" : "") + (o.hint ? " hint" : "");
+        d.textContent = o.t;
+        body.appendChild(d);
+        const sc = body.closest(".console"); if (sc) sc.scrollTop = 1e6;
+        if (!reduce && gap) await sleep(gap);
+      });
+    }
+  };
+}
+async function playPrepared(pr, lines, t) {
+  for (const l of lines) {
+    const o = typeof l === "string" ? { t: l } : l;
+    if (o.d && !reduce) await sleep(o.d);
+    pr.push(o, t);
+  }
+}
+
+/* ---------------- runner ---------------- */
+function mountRunner(el) {
+  const id = el.dataset.ex, predict = el.hasAttribute("data-predict"), check = el.hasAttribute("data-check");
+  const isStatic = el.hasAttribute("data-static"), live = LIVE && !el.hasAttribute("data-nolive") && !isStatic;
+  const original = src(id);
+  let editing = false, showingSol = false;
+  el.innerHTML = `
+    <div class="code-head"><span class="file">${esc(el.dataset.file || "main.js")}</span>${live ? `<span class="live-badge">жинхэнэ JS</span>` : ""}<span class="spacer"></span>
+      ${live ? `<button class="btn sm ed-btn" type="button">${check ? "Анхны код" : "Засах"}</button>` : ""}
+      ${check ? `<button class="btn sm sol-btn" type="button">Хариу харах</button>` : ""}
+      ${isStatic ? "" : `<button class="btn sm primary run-btn" type="button">${check ? (live ? "▶ Шалгах" : "▶ Ажиллуулах") : predict ? "Хариуг харах" : "▶ Ажиллуулах"}</button>`}</div>
+    <div class="code-wrap"></div>
+    ${isStatic ? "" : `<div class="console" aria-live="polite"><div class="console-label">${predict ? "Эхлээд таамаглалаа бич" : "Console"}</div><div class="console-body"></div></div>`}
+    ${check ? `<div class="verdict" hidden></div>` : ""}`;
+  const wrap = $(".code-wrap", el), body = $(".console-body", el), verdict = $(".verdict", el);
+  const pr = body ? makePrinter(body) : null;
+  const idle = () => pr && pr.reset(predict ? "? ? ?" : "▶ дарж ажиллуул");
+  function showCode(code) {
+    if (editing) {
+      wrap.innerHTML = `<textarea class="edit" spellcheck="false" aria-label="Код засах"></textarea>`;
+      const ta = $("textarea", wrap); ta.value = code; ta.rows = Math.min(24, code.split("\n").length + 1);
+      ta.addEventListener("keydown", e => {
+        if (e.key === "Tab") { e.preventDefault(); const s = ta.selectionStart; ta.setRangeText("  ", s, ta.selectionEnd, "end"); }
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); run(); }
+      });
+    } else wrap.innerHTML = codeHTML(code);
+  }
+  const current = () => editing ? $("textarea", wrap).value : (showingSol ? src(id + "-sol") : original);
+  editing = check && live;
+  showCode(original); idle();
+
+  function run() {
+    if (verdict) verdict.hidden = true;
+    const t = pr.start();
+    if (live) {
+      const got = [];
+      execute(current(), o => { got.push(o.t); pr.push(o, t); });
+      if (check) setTimeout(() => {
+        const want = OUT[id + "-sol"].map(x => typeof x === "string" ? x : x.t);
+        const ok = got.length === want.length && got.every((g, i) => g === want[i]);
+        verdict.hidden = false; verdict.className = "verdict " + (ok ? "ok" : "no");
+        verdict.textContent = ok ? "Зөв! Гаралт яг таарлаа." : `Хараахан биш. Хүлээгдэж буй: ${want.join(" / ")}`;
+      }, 400);
+    } else {
+      playPrepared(pr, OUT[showingSol ? id + "-sol" : id] || [], t);
+    }
+  }
+  $(".run-btn", el)?.addEventListener("click", run);
+  $(".ed-btn", el)?.addEventListener("click", e => {
+    if (check) { showingSol = false; showCode(original); idle(); return; }
+    editing = !editing; e.target.textContent = editing ? "Анхны код" : "Засах";
+    showCode(original); idle();
+    if (editing) $("textarea", wrap).focus();
+  });
+  $(".sol-btn", el)?.addEventListener("click", () => { showingSol = true; showCode(src(id + "-sol")); idle(); });
+}
+
+/* ---------------- widgets ---------------- */
+const W = {};
+
+const CONCEPTS = {
+  const: { name: "const", sec: 2, say: "const: дахин оноохгүй хувьсагч. React-д бараг бүх хувьсагч const." },
+  arrow: { name: "Arrow функц", sec: 3, say: "() => { } богино функц. Товчны үйлдэл, map-ийн callback бүгд arrow функц." },
+  fn: { name: "Функц дамжуулах", sec: 3, say: "onClick={add}: функцийг дуудалгүй дамжуулж байна. Хэрэглэгч товч дарахад React дуудна." },
+  object: { name: "Объект", sec: 4, say: "{ id: ..., text } дотор text нь text: text-ийн товчлол. t.id, t.text цэгээр хандана." },
+  map: { name: "map()", sec: 5, say: "Массивын элемент бүрийг <li> болгоно. React-д жагсаалт харуулах гол арга." },
+  destr: { name: "Задлах", sec: 6, say: "{ title } нь props-оос title-ийг, [todos, setTodos] нь useState-ийн буцаасан массивыг задална." },
+  spread: { name: "Spread ...", sec: 7, say: "[...todos, шинэ] хуучин массивыг өөрчлөхгүйгээр ШИНЭ массив үүсгэнэ. React шинэ массив ирэхэд л дэлгэцээ шинэчилнэ." },
+  cond: { name: "?? && !", sec: 8, say: "?? утга байхгүй бол орлуулна, && нөхцөл үнэн бол л харуулна, ! нь эсрэгээр нь болгоно." },
+  module: { name: "import / export", sec: 9, say: "react сангаас useState-ийг оруулж, өөрийн компонентыг бусад файлд ашиглуулахаар гаргана." }
+};
+const RULES = [
+  [1, 'import { useState } from "react";', "module"],
+  [3, "export default", "module"], [3, "{ title }", "destr"],
+  [4, "const", "const"], [4, "[todos, setTodos]", "destr"],
+  [5, "const", "const"], [5, "[text, setText]", "destr"],
+  [7, "const", "const"], [7, "() =>", "arrow"],
+  [8, "!text.trim()", "cond"],
+  [9, "...todos", "spread"], [9, "{ id: Date.now(), text }", "object"],
+  [15, 'title ?? "Миний жагсаалт"', "cond"],
+  [16, "(e) => setText(e.target.value)", "arrow"],
+  [17, "onClick={add}", "fn"],
+  [18, "todos.length === 0 &&", "cond"],
+  [20, "todos.map(", "map"], [20, "(t) =>", "arrow"],
+  [21, "t.id", "object"], [21, "t.text", "object"]
+];
+W.decode = el => {
+  const lines = src("todo").split("\n");
+  const html = lines.map((raw, i) => {
+    const marks = RULES.filter(r => r[0] === i + 1).map(r => { const s = raw.indexOf(r[1]); return [s, s + r[1].length, r[2]]; }).filter(m => m[0] >= 0).sort((a, b) => a[0] - b[0]);
+    let out = "", pos = 0;
+    for (const [s, e, c] of marks) { if (s < pos) continue; out += esc(raw.slice(pos, s)) + `<span class="cc" data-c="${c}">${esc(raw.slice(s, e))}</span>`; pos = e; }
+    out += esc(raw.slice(pos));
+    return `<span class="ln" data-n="${i + 1}">${out || " "}</span>`;
+  }).join("");
+  el.innerHTML = `<div class="cols wide-left">
+    <div class="runner dec"><div class="code-head"><span class="file">TodoList.jsx</span></div><pre class="code"><code>${html}</code></pre></div>
+    <div class="stack">
+      <div class="cchips">${Object.entries(CONCEPTS).map(([k, c]) => `<button class="cchip" type="button" data-c="${k}">${esc(c.name)}<small>${c.sec}</small></button>`).join("")}<button class="cchip" type="button" data-c="*">Бүгдийг</button></div>
+      <p class="csay">Дээрх ойлголтуудын нэг дээр дар.</p>
+      <div class="btn-row"><button class="btn go" type="button" hidden>Тэр хэсэг рүү очих →</button></div>
+    </div></div>`;
+  const say = $(".csay", el), go = $(".go", el), dec = $(".dec", el);
+  let cur = null;
+  $$(".cchip", el).forEach(b => b.addEventListener("click", () => {
+    const c = b.dataset.c; cur = c === cur ? null : c;
+    $$(".cchip", el).forEach(x => x.classList.toggle("on", x.dataset.c === cur));
+    $$(".cc", el).forEach(s => s.classList.toggle("on", cur === "*" || s.dataset.c === cur));
+    dec.classList.toggle("all", cur === "*");
+    if (!cur) { say.textContent = "Дээрх ойлголтуудын нэг дээр дар."; go.hidden = true; }
+    else if (cur === "*") { say.textContent = `Энэ 26 мөр кодонд ${RULES.length} газар JS ойлголт байна. Бүгд энгийн JavaScript.`; go.hidden = true; }
+    else { const k = CONCEPTS[cur]; say.textContent = k.say; go.hidden = false; go.textContent = `${k.sec}-р хэсэг рүү очих →`; }
+  }));
+  go.addEventListener("click", () => { if (cur && CONCEPTS[cur]) show(firstOf(CONCEPTS[cur].sec)); });
+};
+
+W.forms = el => {
+  const steps = [
+    ["function double(n) {\n  return n * 2;\n}", "Энгийн функц. function үг, нэр, параметр, return."],
+    ["const double = function (n) {\n  return n * 2;\n};", "Функцийг хувьсагчид хадгалж болно: функц бол утга."],
+    ["const double = (n) => {\n  return n * 2;\n};", "function үгийн оронд => сум. Энэ бол arrow функц."],
+    ["const double = (n) => n * 2;", "Ганц мөр return бол { } ба return-ийг хасна. Утга автоматаар буцна."],
+    ["const double = n => n * 2;", "Ганц параметртэй бол хаалтыг ч хасаж болно. React кодонд (n) хэлбэр илүү түгээмэл."]
+  ];
+  let i = 0;
+  el.innerHTML = `<div class="stack"><div class="runner"><div class="code-head"><span class="file">double.js</span><span class="spacer"></span><span class="dots">${steps.map(() => "<i></i>").join("")}</span></div><div class="cw"></div></div>
+    <p class="say"></p>
+    <div class="btn-row"><button class="btn pv" type="button">◀</button><button class="btn primary nx" type="button">Дараагийн хэлбэр ▶</button></div></div>`;
+  function draw() {
+    $(".cw", el).innerHTML = codeHTML(steps[i][0]);
+    $(".say", el).textContent = `${i + 1}/${steps.length}. ${steps[i][1]}`;
+    $$(".dots i", el).forEach((d, k) => d.classList.toggle("on", k === i));
+    $(".pv", el).disabled = i === 0; $(".nx", el).disabled = i === steps.length - 1;
+  }
+  $(".pv", el).addEventListener("click", () => { i--; draw(); });
+  $(".nx", el).addEventListener("click", () => { i++; draw(); });
+  draw();
+};
+
+W.arr = el => {
+  const M = [
+    { c: "map((n) => n * 2)", kind: "Шинэ массив", f: a => ({ val: a.map(n => n * 2), notes: a.map(n => `→ ${n * 2}`), cls: a.map(() => "keep") }) },
+    { c: "filter((n) => n > 3)", kind: "Шинэ массив", f: a => ({ val: a.filter(n => n > 3), notes: a.map(n => n > 3 ? "✓" : "✗"), cls: a.map(n => n > 3 ? "keep" : "drop") }) },
+    { c: "find((n) => n > 5)", kind: "Нэг утга", f: a => { const i = a.findIndex(n => n > 5); return { val: i < 0 ? undefined : a[i], notes: a.map((n, k) => k < i || i < 0 ? "✗" : k === i ? "олдлоо" : "шалгаагүй"), cls: a.map((n, k) => k === i ? "hit" : (i >= 0 && k > i) ? "skip" : "drop") }; } },
+    { c: "findIndex((n) => n > 5)", kind: "Нэг тоо", f: a => { const i = a.findIndex(n => n > 5); return { val: i, notes: a.map((n, k) => `[${k}]`), cls: a.map((n, k) => k === i ? "hit" : (i >= 0 && k > i) ? "skip" : "") }; } },
+    { c: "reduce((sum, n) => sum + n, 0)", kind: "Нэг утга", f: a => { let s = 0; const notes = a.map(n => `${s} + ${n} = ${s += n}`); return { val: s, notes, cls: a.map(() => "keep") }; } },
+    { c: "some((n) => n > 7)", kind: "true / false", f: a => { const i = a.findIndex(n => n > 7); return { val: i >= 0, notes: a.map((n, k) => k === i ? "✓ хангалттай" : ""), cls: a.map((n, k) => k === i ? "hit" : (i >= 0 && k > i) ? "skip" : "") }; } },
+    { c: "every((n) => n > 0)", kind: "true / false", f: a => { const i = a.findIndex(n => !(n > 0)); return { val: i < 0, notes: a.map((n, k) => n > 0 ? "✓" : "✗"), cls: a.map((n, k) => k === i ? "hit" : (i >= 0 && k > i) ? "skip" : "keep") }; } },
+    { c: "includes(6)", kind: "true / false", f: a => ({ val: a.includes(6), notes: a.map(n => n === 6 ? "6!" : ""), cls: a.map(n => n === 6 ? "hit" : "") }) },
+    { c: "slice(1, 3)", kind: "Шинэ массив", f: a => ({ val: a.slice(1, 3), notes: a.map((n, k) => `[${k}]`), cls: a.map((n, k) => k >= 1 && k < 3 ? "keep" : "drop") }) },
+    { c: "toSorted((a, b) => a - b)", kind: "Шинэ массив", f: a => ({ val: [...a].sort((x, y) => x - y), notes: a.map(() => ""), cls: a.map(() => "") }) }
+  ];
+  let cur = 0;
+  el.innerHTML = `<div class="stack">
+    <div class="arr-in"><label for="arr-v">const nums = [</label><input id="arr-v" value="3, 8, 1, 6, 4" autocomplete="off"><span>];</span></div>
+    <div class="mbtns">${M.map((m, i) => `<button class="btn" type="button" data-i="${i}">${esc(m.c.split("(")[0])}</button>`).join("")}</div>
+    <div class="cw"></div>
+    <div class="arow"></div>
+    <div class="res"><span class="lbl">Үр дүн</span><span class="val"></span><span class="facts2"></span></div></div>`;
+  const inp = $("#arr-v", el);
+  function draw() {
+    const a = inp.value.split(",").map(s => s.trim()).filter(Boolean).map(Number).filter(n => !Number.isNaN(n));
+    const m = M[cur], r = m.f(a);
+    $$(".mbtns .btn", el).forEach((b, i) => b.classList.toggle("on", i === cur));
+    $(".cw", el).innerHTML = codeHTML(`const result = nums.${m.c};`);
+    $(".arow", el).innerHTML = a.map((n, k) => `<div class="ach"><span class="chip ${r.cls[k] || ""}">${n}</span><small>${esc(r.notes[k] || "")}</small></div>`).join("") || `<span class="small-note">Таслалаар тусгаарласан тоо оруул.</span>`;
+    const v = $(".res .val", el); v.textContent = fmt(r.val, 1); v.classList.remove("pop"); void v.offsetWidth; v.classList.add("pop");
+    $(".facts2", el).innerHTML = `<span>${m.kind}</span><span class="y">nums өөрчлөгдөхгүй</span>`;
+  }
+  $$(".mbtns .btn", el).forEach(b => b.addEventListener("click", () => { cur = +b.dataset.i; draw(); }));
+  inp.addEventListener("input", draw); draw();
+};
+
+W.destr = el => {
+  const obj = [["name", "'Сараа'"], ["age", "17"], ["city", "'Эрдэнэт'"], ["phone", "'9911-2233'"]];
+  const sel = new Set(["name", "city"]);
+  el.innerHTML = `<div class="stack">
+    <div class="objbox"><span>const user = {</span>${obj.map(([k, v]) => `<button class="kbtn" type="button" data-k="${k}">&nbsp;&nbsp;${k}: ${esc(v)},</button>`).join("")}<span>};</span></div>
+    <button class="kbtn ghost" type="button" data-k="email" style="align-self:flex-start">+ email (объектод байхгүй)</button>
+    <div class="cw"></div><div class="vars"></div></div>`;
+  function draw() {
+    $$(".kbtn", el).forEach(b => b.classList.toggle("on", sel.has(b.dataset.k)));
+    const ks = [...obj.map(o => o[0]), "email"].filter(k => sel.has(k));
+    $(".cw", el).innerHTML = codeHTML(ks.length ? `const { ${ks.join(", ")} } = user;` : "// түлхүүр сонго");
+    $(".vars", el).innerHTML = ks.map(k => { const o = obj.find(x => x[0] === k); return `<div class="vbox${o ? "" : " undef"}"><span class="vn">${k}</span>${esc(o ? o[1] : "undefined")}</div>`; }).join("");
+  }
+  $$(".kbtn", el).forEach(b => b.addEventListener("click", () => { const k = b.dataset.k; sel.has(k) ? sel.delete(k) : sel.add(k); draw(); }));
+  draw();
+};
+
+W.ref = el => {
+  const code = "const a = [1, 2];\nconst b = a;\nb.push(3);\nconsole.log(a);\nconst c = [...a, 4];\nconsole.log(a === b, a === c);";
+  const steps = [
+    { vars: { a: 1 }, heap: { 1: "[1, 2]" }, say: "Санах ойд массив #1 үүслээ. a нь түүн рүү заана." },
+    { vars: { a: 1, b: 1 }, heap: { 1: "[1, 2]" }, say: "b = a нь массивыг ХУУЛАХГҮЙ. b ижил #1 массив руу заана." },
+    { vars: { a: 1, b: 1 }, heap: { 1: "[1, 2, 3]" }, say: "b-ээр дамжуулж #1-д 3 нэмлээ. a ч мөн #1-ийг заадаг!" },
+    { vars: { a: 1, b: 1 }, heap: { 1: "[1, 2, 3]" }, out: "[1, 2, 3]", say: "a-г хэзээ ч өөрчлөөгүй мэт боловч [1, 2, 3] хэвлэгдлээ." },
+    { vars: { a: 1, b: 1, c: 2 }, heap: { 1: "[1, 2, 3]", 2: "[1, 2, 3, 4]" }, say: "Spread нь ШИНЭ массив #2 үүсгэнэ. #1 өөрчлөгдөхгүй." },
+    { vars: { a: 1, b: 1, c: 2 }, heap: { 1: "[1, 2, 3]", 2: "[1, 2, 3, 4]" }, out: "true false", say: "=== нь агуулгыг биш ХАЯГИЙГ харьцуулна. React ч яг ингэж state өөрчлөгдсөн эсэхийг шалгадаг." }
+  ];
+  let i = -1;
+  el.innerHTML = `<div class="cols">
+    <div class="runner"><div class="code-head"><span class="file">ref.js</span></div><div class="cw"></div>
+      <div class="console"><div class="console-label">Console</div><div class="console-body"></div></div></div>
+    <div class="stack"><div class="memory"><div class="memcol vcol"><h4>Хувьсагч</h4></div><div class="memcol hcol"><h4>Массив</h4></div></div>
+      <p class="say"></p>
+      <div class="btn-row"><button class="btn primary nx" type="button">Дараагийн мөр ▶</button><button class="btn rs" type="button">Эхнээс</button></div></div></div>`;
+  $(".cw", el).innerHTML = codeHTML(code);
+  const pre = $(".code", el), con = $(".console-body", el), nx = $(".nx", el);
+  function draw() {
+    const s = steps[i];
+    $(".vcol", el).innerHTML = "<h4>Хувьсагч</h4>" + (s ? Object.entries(s.vars).map(([k, h]) => `<div class="vref"><b>${k}</b><span>→</span><span class="pill h${h}">#${h}</span></div>`).join("") : "");
+    $(".hcol", el).innerHTML = "<h4>Массив</h4>" + (s ? Object.entries(s.heap).map(([h, v]) => `<div class="hbox h${h}"><span class="pill h${h}">#${h}</span>${esc(v)}</div>`).join("") : "");
+    $(".say", el).textContent = s ? s.say : "Мөр бүрийн өмнө «санах ойд юу болох вэ?» гэж бодоорой.";
+    mark(pre, s ? [i + 1] : []);
+    nx.disabled = i >= steps.length - 1;
+  }
+  nx.addEventListener("click", () => {
+    i++; const s = steps[i];
+    if (s.out) { const d = document.createElement("div"); d.className = "out"; d.textContent = s.out; con.appendChild(d); }
+    draw();
+  });
+  $(".rs", el).addEventListener("click", () => { i = -1; con.innerHTML = ""; draw(); });
+  draw();
+};
+
+W.truthy = el => {
+  const V = [["0", "number", 0], ['""', "string", 0], ["null", "object", 0], ["undefined", "undefined", 0], ["NaN", "number", 0], ["false", "boolean", 0],
+    ['"0"', "string", 1], ['" "', "string", 1], ["[]", "object", 1], ["{}", "object", 1], ["-1", "number", 1], ['"false"', "string", 1]];
+  el.innerHTML = `<div class="stack"><div class="tgrid">${V.map(([v, t, b]) => `<button class="tcard" type="button" data-b="${b}"><code>${esc(v)}</code><small>typeof: ${t}</small><span class="tv">?</span></button>`).join("")}</div>
+    <div class="btn-row"><button class="btn all" type="button">Бүгдийг харуулах</button><button class="btn rs" type="button">Нуух</button></div></div>`;
+  const flip = c => { const t = c.dataset.b === "1"; c.classList.add(t ? "T" : "F"); $(".tv", c).textContent = t ? "truthy · if ажиллана" : "falsy · if алгасна"; };
+  $$(".tcard", el).forEach(c => c.addEventListener("click", () => flip(c)));
+  $(".all", el).addEventListener("click", () => $$(".tcard", el).forEach(flip));
+  $(".rs", el).addEventListener("click", () => $$(".tcard", el).forEach(c => { c.classList.remove("T", "F"); $(".tv", c).textContent = "?"; }));
+};
+
+W.render = el => {
+  el.innerHTML = `<div class="stack">
+    <div class="ctrls">
+      <label for="cr-l"><input type="checkbox" id="cr-l" checked> isLoggedIn</label>
+      <label for="cr-n">name <input type="text" id="cr-n" value="Сараа" autocomplete="off"></label>
+      <span class="stepper"><span style="font-family:var(--f-code)">count</span><button class="btn sm minus" type="button" aria-label="Хасах">−</button><output id="cr-c">0</output><button class="btn sm inc" type="button" aria-label="Нэмэх">+</button></span>
+    </div>
+    <div class="cols wide-left"><div class="runner"><div class="code-head"><span class="file">Header.jsx</span></div><div class="cw"></div></div>
+      <div class="screen"><div class="screen-bar"><i></i><i></i><i></i><span>Дэлгэц дээр</span></div><div class="screen-body"></div></div></div></div>`;
+  let count = 0;
+  const l = $("#cr-l", el), n = $("#cr-n", el), out = $("#cr-c", el);
+  function draw() {
+    out.textContent = count;
+    $(".cw", el).innerHTML = codeHTML(`const isLoggedIn = ${l.checked};\nconst name = "${n.value.replace(/"/g, "")}";\nconst count = ${count};\n\n<header>\n  {isLoggedIn ? <p>Сайн уу, {name}!</p> : <Login />}\n  {count > 0 && <span>Сагс: {count}</span>}\n  {count && <span>Сагс: {count}</span>}\n</header>`);
+    const nothing = `<span class="nothing">(юу ч гарахгүй)</span>`;
+    const third = count ? `<span class="ui-badge">Сагс: ${count}</span>` : `<span class="bug" title="0 нь falsy боловч React үүнийг тоо болгож зурна">0</span>`;
+    $(".screen-body", el).innerHTML = `
+      <div class="srow"><span class="ln-ref">мөр 6</span>${l.checked ? `<span>Сайн уу, ${esc(n.value)}!</span>` : `<span class="ui-btn">Нэвтрэх</span>`}</div>
+      <div class="srow"><span class="ln-ref">мөр 7</span>${count > 0 ? `<span class="ui-badge">Сагс: ${count}</span>` : nothing}</div>
+      <div class="srow"><span class="ln-ref">мөр 8</span>${third}</div>
+      ${count ? "" : `<p class="small-note">Мөр 8: <code class="i">0 &amp;&amp; ...</code> нь 0 буцаадаг тул дэлгэцэнд «0» гарлаа. <code class="i">count &gt; 0 &amp;&amp;</code> гэж бич.</p>`}`;
+  }
+  $(".minus", el).addEventListener("click", () => { count = Math.max(0, count - 1); draw(); });
+  $(".inc", el).addEventListener("click", () => { count++; draw(); });
+  l.addEventListener("change", draw); n.addEventListener("input", draw); draw();
+};
+
+W.quiz = el => {
+  const Q = [
+    { code: `const x = 5;\nx = 6;`, q: "Юу болох вэ?", o: ["x нь 6 болно", "x нь 5 хэвээр", "TypeError", "undefined"], a: 2, why: "const хувьсагчид дахин утга оноож болохгүй." },
+    { code: `console.log([1, 2, 3].map((n) => n * 10));`, q: "Юу хэвлэх вэ?", o: ["60", "[10, 20, 30]", "[1, 2, 3]", "undefined"], a: 1, why: "map элемент бүрийг хувиргаж шинэ массив буцаана." },
+    { code: `const { a, c } = { a: 1, b: 2 };\nconsole.log(c);`, q: "Юу хэвлэх вэ?", o: ["2", "undefined", "null", "ReferenceError"], a: 1, why: "Объектод c түлхүүр байхгүй тул undefined." },
+    { code: `const a = [1, 2];\nconst b = a;\nb.push(3);\nconsole.log(a.length);`, q: "Юу хэвлэх вэ?", o: ["2", "3", "1", "TypeError"], a: 1, why: "a, b нь нэг массивыг заадаг. b-д push хийхэд a ч өөрчлөгдөнө." },
+    { code: `const add = (a, b) => { a + b };\nconsole.log(add(1, 2));`, q: "Юу хэвлэх вэ?", o: ["3", "undefined", "'12'", "Алдаа"], a: 1, why: "{ } байвал return заавал бичнэ. Үгүй бол undefined буцна." },
+    { code: `const count = 0;\nconsole.log(count ?? "байхгүй");`, q: "Юу хэвлэх вэ?", o: ["0", "байхгүй", "null", "false"], a: 0, why: "?? зөвхөн null, undefined дээр ажиллана. 0 бол жинхэнэ утга. (|| байсан бол «байхгүй» гарна.)" },
+    { code: `setTimeout(() => console.log("A"), 0);\nconsole.log("B");`, q: "Ямар дарааллаар хэвлэх вэ?", o: ["A, B", "B, A", "Зөвхөн A", "Зөвхөн B"], a: 1, why: "setTimeout 0 мс ч гэсэн энгийн код дууссаны дараа ажиллана." },
+    { code: `// App.js\nexport default function App() { }`, q: "Аль нь зөв импорт вэ?", o: ['import { App } from "./App"', 'import App from "./App"', 'import * from "./App"', 'require App from "./App"'], a: 1, why: "default экспортыг { }-гүй импортлоно." },
+    { code: `const user = { name: "Бат", age: 17 };\nconst u2 = { ...user, age: 18 };\nconsole.log(user.age);`, q: "Юу хэвлэх вэ?", o: ["17", "18", "undefined", "TypeError"], a: 0, why: "Spread шинэ объект үүсгэнэ. Эх user өөрчлөгдөхгүй." }
+  ];
+  let k = 0;
+  el.innerHTML = `<div class="quiz">
+    <div class="quiz-top"><span class="quiz-q"></span><span class="qdots">${Q.map(() => "<i></i>").join("")}</span></div>
+    <div class="cols"><div class="cw"></div><div class="opts" style="grid-template-columns:1fr 1fr"></div></div>
+    <div class="why" hidden></div>
+    <div class="btn-row"><button class="btn pv" type="button">← Өмнөх</button><button class="btn primary rv" type="button">Хариуг харах</button><button class="btn nx" type="button">Дараагийн асуулт →</button></div></div>`;
+  function draw() {
+    const q = Q[k];
+    $(".quiz-q", el).textContent = `${k + 1}/${Q.length}. ${q.q}`;
+    $$(".qdots i", el).forEach((d, i) => d.classList.toggle("on", i === k));
+    $(".cw", el).innerHTML = codeHTML(q.code);
+    $(".opts", el).innerHTML = q.o.map((o, i) => `<div class="opt"><span class="k">${i + 1}</span><code>${esc(o)}</code></div>`).join("");
+    const w = $(".why", el); w.hidden = true; w.textContent = q.why;
+    $(".pv", el).disabled = k === 0; $(".nx", el).disabled = k === Q.length - 1;
+  }
+  $(".rv", el).addEventListener("click", () => {
+    $$(".opt", el).forEach((o, i) => { o.classList.toggle("right", i === Q[k].a); o.classList.toggle("dim", i !== Q[k].a); });
+    $(".why", el).hidden = false;
+  });
+  $(".pv", el).addEventListener("click", () => { if (k > 0) { k--; draw(); } });
+  $(".nx", el).addEventListener("click", () => { if (k < Q.length - 1) { k++; draw(); } });
+  draw();
+};
+
+W.checklist = el => {
+  const items = ["const / let ялгаа", "Arrow функц", "onClick={f} ба f()", "Объект товчлол { name }", "map, filter, find", "Объект, массив задлах", "Spread-ээр шинэ хуулбар", "=== ба truthy/falsy", "? :  &&  ??  ?.", "import / export", "async / await"];
+  let saved = []; try { saved = JSON.parse(store.get("check", "[]")); } catch {}
+  el.innerHTML = `<div class="checklist">${items.map((t, i) => `<label for="ck-${i}"><input type="checkbox" id="ck-${i}"${saved.includes(i) ? " checked" : ""}>${esc(t)}</label>`).join("")}</div>`;
+  el.addEventListener("change", () => store.set("check", JSON.stringify($$("input", el).map((c, i) => c.checked ? i : -1).filter(i => i >= 0))));
+};
+
+/* ---------------- lesson structure ---------------- */
+const SECS = [
+  { name: "Нээлт", from: 0, to: 4, ds: "React код хэр их JS вэ? Ойлголтын газрын зураг" },
+  { name: "Хувьсагч", from: 4, to: 11, ds: "const, let, төрөл, template literal, төрөл хөрвүүлэлт" },
+  { name: "Функц", from: 11, to: 20, ds: "Arrow функц, анхдагч утга, функцийг дамжуулах" },
+  { name: "Объект", from: 20, to: 26, ds: "Түлхүүр/утга, товчлол, Object.keys/entries" },
+  { name: "Массив", from: 26, to: 39, ds: "map, filter, find, reduce, дасгал" },
+  { name: "Задлах", from: 39, to: 46, ds: "Объект ба массив задлах, useState, props" },
+  { name: "Spread", from: 46, to: 54, ds: "Лавлагаа ба хуулбар, ... spread/rest, state шинэчлэх" },
+  { name: "Нөхцөл", from: 54, to: 62, ds: "===, truthy/falsy, ? : && ?? ?., нөхцөлт харуулах" },
+  { name: "Модуль", from: 62, to: 67, ds: "import / export, default ба нэртэй" },
+  { name: "Async", from: 67, to: 75, ds: "Event loop, Promise, async/await, try/catch, fetch" },
+  { name: "Дүгнэлт", from: 75, to: 80, ds: "Кодыг дахин унших, сорил, чеклист" }
+];
+const slides = $$(".slide"), stage = $("#stage"), rail = $("#rail");
+const firstOf = s => slides.findIndex(x => +x.dataset.sec === s);
+
+$$(".runner[data-ex]").forEach(mountRunner);
+$$("[data-widget]").forEach(el => W[el.dataset.widget](el));
+
+slides.forEach(sl => {
+  const s = +sl.dataset.sec; if (!s) return;
+  const sec = SECS[s - 1], eb = document.createElement("div");
+  eb.className = "eyebrow";
+  eb.innerHTML = `<span class="num">${String(s).padStart(2, "0")}</span><span>${esc(sec.name)}</span><span>${sec.from}–${sec.to} мин</span>`;
+  sl.prepend(eb);
+});
+
+rail.innerHTML = SECS.map((s, i) => `<button class="seg" type="button" style="flex-grow:${s.to - s.from}" data-s="${i + 1}" title="${esc(s.name)} · ${s.from}–${s.to} мин"><span class="seg-bar"></span><span class="seg-l">${i + 1}. ${esc(s.name)}</span></button>`).join("");
+$$(".seg", rail).forEach(b => b.addEventListener("click", () => show(firstOf(+b.dataset.s))));
+$("#plan").innerHTML = SECS.map((s, i) => `<button class="plan-row" type="button" data-s="${i + 1}"><span class="n">${i + 1}</span><span class="nm">${esc(s.name)}</span><span class="mn">${s.from}–${s.to} мин</span><span class="ds">${esc(s.ds)}</span></button>`).join("");
+$$(".plan-row").forEach(b => b.addEventListener("click", () => show(firstOf(+b.dataset.s))));
+
+let cur = 0;
+function show(i) {
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach((s, k) => s.hidden = k !== cur);
+  stage.scrollTop = 0;
+  const sec = +slides[cur].dataset.sec;
+  $$(".seg", rail).forEach(b => { const n = +b.dataset.s; b.classList.toggle("cur", n === sec); b.classList.toggle("done", n < sec); });
+  $("#count").innerHTML = `<b>${cur + 1}</b> / ${slides.length} · ${esc(slides[cur].dataset.title || "")}`;
+  $("#prev").disabled = cur === 0; $("#next").disabled = cur === slides.length - 1;
+  store.set("slide", cur); tick();
+}
+$("#prev").addEventListener("click", () => show(cur - 1));
+$("#next").addEventListener("click", () => show(cur + 1));
+
+const notesBtn = $("#notes-btn");
+function setNotes(on) { document.body.classList.toggle("notes", on); notesBtn.setAttribute("aria-pressed", on); store.set("notes", on ? "1" : "0"); }
+notesBtn.addEventListener("click", () => setNotes(!document.body.classList.contains("notes")));
+setNotes(store.get("notes", "0") === "1");
+
+function fs() {
+  if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+  else document.documentElement.requestFullscreen?.().catch(() => {});
+}
+$("#fs-btn").addEventListener("click", fs);
+
+let tRun = false, tStart = 0, tAcc = 0, lock = null;
+const elapsed = () => tAcc + (tRun ? Date.now() - tStart : 0);
+function tick() {
+  const ms = elapsed(), m = Math.floor(ms / 60000), s = Math.floor(ms / 1000) % 60;
+  $("#timer-t").innerHTML = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")} <small>/ 80</small>`;
+  const sec = SECS[+slides[cur].dataset.sec - 1];
+  $("#timer").classList.toggle("late", !!sec && ms / 60000 > sec.to);
+}
+function toggleTimer() {
+  if (tRun) { tAcc = elapsed(); tRun = false; lock?.release?.().catch(() => {}); lock = null; }
+  else { tStart = Date.now(); tRun = true; navigator.wakeLock?.request("screen").then(l => lock = l).catch(() => {}); }
+  $("#timer-go").textContent = tRun ? "Зогсоох" : (tAcc ? "Үргэлжлүүлэх" : "Эхлэх");
+  tick();
+}
+$("#timer-go").addEventListener("click", toggleTimer);
+$("#timer-reset").addEventListener("click", () => { tAcc = 0; tStart = Date.now(); tick(); });
+setInterval(() => { if (tRun) tick(); }, 500);
+
+document.addEventListener("keydown", e => {
+  const tg = e.target;
+  if (tg.matches("input, textarea, select") || e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key;
+  if (k === "ArrowRight" || k === "PageDown" || (k === " " && !tg.matches("button"))) { e.preventDefault(); show(cur + 1); }
+  else if (k === "ArrowLeft" || k === "PageUp") { e.preventDefault(); show(cur - 1); }
+  else if (k === "Home") show(0);
+  else if (k === "End") show(slides.length - 1);
+  else if (k === "n" || k === "N" || k === "и" || k === "И") setNotes(!document.body.classList.contains("notes"));
+  else if (k === "f" || k === "F" || k === "ө" || k === "Ө") fs();
+  else if (k === "t" || k === "T" || k === "э" || k === "Э") toggleTimer();
+});
+
+const h = /^#s(\d+)$/.exec(location.hash);
+show(h ? +h[1] - 1 : +store.get("slide", 0) || 0);
+})();
+</script>
