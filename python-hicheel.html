@@ -37,7 +37,7 @@ body{height:100%; margin:0; background:var(--bg); color:var(--ink); font-family:
 *{box-sizing:border-box}
 button,input{font:inherit; color:inherit}
 /* JetBrains Mono ligatures turn >= into ≥; students must see the characters they will type */
-code,pre,kbd,.code,.console,.trace,.chip,.field,.calc-in,.range-in,.idx-in,.m-in,.m-box,.m-out,.checks,.box-val,.box-name,.box-type,.sheet,.op,.opt,.file,.timer-t,.hist{font-variant-ligatures:none; font-feature-settings:"calt" 0, "liga" 0}
+code,pre,kbd,.code,.console,.trace,.chip,.field,.calc-in,.range-in,.idx-in,.m-in,.m-box,.m-out,.checks,.box-val,.box-name,.box-type,.sheet,.op,.opt,.file,.timer-t,.hist,.mrow,.lab-btns,.lab-x,.setops,.venn,.ans{font-variant-ligatures:none; font-feature-settings:"calt" 0, "liga" 0}
 :focus-visible{outline:3px solid var(--blue); outline-offset:2px}
 
 .app{height:100%; display:grid; grid-template-rows:auto 1fr auto}
@@ -284,6 +284,53 @@ body.notes .note{display:block}
 .tri b{font-family:var(--f-display); font-size:3rem; line-height:1; color:var(--blue)}
 .tri p{font-size:1.1rem}
 
+/* ---------- method labs (list / set) ---------- */
+.lab-btns{display:flex; flex-wrap:wrap; gap:.45rem}
+.lab-btns .btn{font-family:var(--f-code); font-weight:600; font-size:.88rem; padding:.35em .7em; border-width:1.5px}
+.lab-btns .btn.bad{border-style:dashed}
+.lab-x{display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; font-family:var(--f-code); font-size:1.15rem}
+.lab-x input{width:9rem; font-family:var(--f-code); font-size:1.1rem; padding:.2rem .45rem; border-radius:8px; border:2px solid var(--ink); background:var(--surface)}
+.lab-x input.wide{width:min(21rem, 70vw)}
+.cell.static{cursor:default}
+.lst-empty{font-family:var(--f-code); color:var(--muted); font-size:1.3rem; padding:.8rem 0}
+.setbag{display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; min-height:5.2rem; padding:.9rem 1.6rem; border:3px solid var(--ink); border-radius:999px; background:var(--surface)}
+.setbag .chip{border-radius:50%; min-width:3rem; height:3rem; display:grid; place-items:center; padding:0 .3rem}
+.setbag .chip.sel{background:var(--mark); color:var(--mark-ink); border-color:var(--mark-ink)}
+.small-note{color:var(--muted); font-size:.92rem}
+.out.pr{color:var(--code-dim)}
+.out.pr .v{color:var(--code-fg)}
+
+/* ---------- venn ---------- */
+.venn svg{width:100%; height:auto; max-height:21rem; display:block}
+.venn .z{fill:var(--blue-soft); transition:fill .25s}
+.venn .z.on{fill:var(--mark)}
+.venn .ring{fill:none; stroke:var(--ink); stroke-width:3}
+.venn text{fill:var(--ink); font-family:var(--f-body); font-size:17px; text-anchor:middle; dominant-baseline:middle}
+.venn text.on{fill:var(--mark-ink); font-weight:700}
+.venn text.lbl{font-family:var(--f-code); font-weight:600; font-size:19px}
+.setops{display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 12rem), 1fr)); gap:.5rem}
+.setops .btn{display:flex; flex-direction:column; align-items:flex-start; gap:.1rem; white-space:normal; text-align:left; padding:.45em .8em}
+.setops .btn code{font-family:var(--f-code); font-size:1.05rem}
+.setops .btn small{font-weight:500; color:var(--muted); font-size:.8rem}
+.setops .btn.on{background:var(--mark); color:var(--mark-ink); border-color:var(--mark-ink)}
+.setops .btn.on small{color:var(--mark-ink)}
+
+/* ---------- compare / methods ---------- */
+.cmp td:first-child{font-family:var(--f-body); color:var(--muted); font-weight:600}
+.cmp td.y{color:var(--ok); font-weight:600}
+.cmp td.n{color:var(--err); font-weight:600}
+.which{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap:.6rem}
+.wcard{text-align:left; font-size:1.02rem; padding:.7rem .9rem; border-radius:12px; border:2px solid var(--rule); background:var(--surface); cursor:pointer; display:flex; flex-direction:column; gap:.4rem; align-items:flex-start}
+.wcard:hover{border-color:var(--ink)}
+.ans{font-family:var(--f-code); font-weight:700; background:var(--mark); color:var(--mark-ink); padding:0 .5rem; border-radius:6px}
+.mgrid{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap:1.2rem; align-items:start}
+.mcol{background:var(--surface); border:1px solid var(--rule); border-radius:14px; padding:.9rem 1.1rem}
+.mcol h3{display:flex; align-items:baseline; gap:.6rem; font-family:var(--f-code); font-size:1.3rem}
+.mcol h3 small{font-family:var(--f-body); font-weight:500; font-size:.85rem; color:var(--muted)}
+.mrow{display:grid; grid-template-columns:minmax(0, 10.5rem) minmax(0, 1fr); gap:.6rem; padding:.28rem 0; border-bottom:1px solid var(--rule); font-size:.95rem}
+.mrow code{font-family:var(--f-code); font-weight:600; color:var(--blue); word-break:break-word}
+.mrow span{color:var(--muted)}
+
 @media (max-width: 760px){
   .seg-l{display:none}
   .brand small{display:none}
@@ -357,7 +404,7 @@ body.notes .note{display:block}
       </div>
     </div>
   </div>
-  <aside class="note"><b>Багшид</b>Мөр дээр дарвал тухайн хэсгийн эхний слайд руу шилжинэ. Дээд талын шугамын хэсэг бүрийн өргөн нь түүнд зарцуулах минуттай пропорциональ. Цаг хоцорвол Давталт, Жагсаалтын 2 дахь жишээг алгас. <kbd>T</kbd> дарж цагийг эхлүүлбэл хэсгийн хугацаа хэтэрсэн үед цаг улаан болно.</aside>
+  <aside class="note"><b>Багшид</b>Мөр дээр дарвал тухайн хэсгийн эхний слайд руу шилжинэ. Дээд талын шугамын хэсэг бүрийн өргөн нь түүнд зарцуулах минуттай пропорциональ. Хамгийн урт хэсэг нь list · tuple · set (16 мин). Цаг хоцорвол «Жагсаалттай ажиллах», «Аргуудын хүснэгт» слайдыг алгас (хүснэгтийг сурагчдаар зураг авахуул). <kbd>T</kbd> дарж цагийг эхлүүлбэл хэсгийн хугацаа хэтэрсэн үед цаг улаан болно.</aside>
 </section>
 
 <!-- ===================== 1. INTRO ===================== -->
@@ -575,6 +622,13 @@ body.notes .note{display:block}
   <aside class="note"><b>Багшид</b>Индекс 0-ээс эхэлдэг нь хамгийн том урхи. Дарахаас өмнө cities[2], cities[-1], cities[5]-ыг таамаглуул. Хайрцган дээр дарахад индекс нь сонгогдоно.</aside>
 </section>
 
+<section class="slide" data-sec="7" data-title="list-ийн аргууд">
+  <h2>list-ийн аргууд: товч дараад үз</h2>
+  <p class="lead">Арга (method) гэдэг нь цэгийн дараа бичдэг функц. <code class="i">bag.append("алим")</code> = «bag-д алим нэм».</p>
+  <div class="widget" data-widget="listlab"></div>
+  <aside class="note"><b>Багшид</b>Товч дарахаас өмнө «Жагсаалт ямар болох вэ?» гэж асуу. x талбарт сурагчдын санал болгосон зүйлийг бич. Тасархай хүрээтэй товчнууд алдаа гаргаж болзошгүй: байхгүй зүйлийг remove(), хоосон жагсаалтаас pop(). pop() авсан утгаа буцааж өгдгийг онцол. sort() үсгийн дарааллаар эрэмбэлнэ.</aside>
+</section>
+
 <section class="slide" data-sec="7" data-title="Жагсаалттай ажиллах">
   <h2>Жагсаалтад нэмэх, тоолох, давтах</h2>
   <div class="cols">
@@ -585,7 +639,117 @@ body.notes .note{display:block}
     </div>
     <div class="runner" data-ex="friends"></div>
   </div>
-  <aside class="note"><b>Багшид</b>append = төгсгөлд нэмэх, len = урт, sum = нийлбэр. friends талбарт ангийн 3–4 сурагчийн нэрийг таслалаар тусгаарлан бичиж ажиллуул. Таамаглал 5: nums[0] + nums[-1] = 10 + 30 = 40.</aside>
+  <aside class="note"><b>Багшид</b>Цаг дутвал энэ слайдыг алгас. len = урт, sum = нийлбэр. friends талбарт ангийн 3–4 сурагчийн нэрийг таслалаар тусгаарлан бичиж ажиллуул. Таамаглал 5: nums[0] + nums[-1] = 10 + 30 = 40.</aside>
+</section>
+
+<section class="slide" data-sec="7" data-title="tuple">
+  <h2>tuple: өөрчлөгддөггүй жагсаалт</h2>
+  <p class="lead">Дугуй хаалт <code class="i">( )</code>. Нэгэнт үүсгэсэн бол <span class="mk">нэмэх, хасах, солих боломжгүй</span>. Координат, долоо хоногийн өдрүүд, төрсөн огноо зэрэг тогтмол өгөгдөлд тохирно.</p>
+  <div class="cols">
+    <div class="runner" data-ex="tup"></div>
+    <div class="stack">
+      <div class="runner" data-ex="tupm"></div>
+      <div class="rule"><b>(5,)</b>Нэг элементтэй tuple-д таслал заавал хэрэгтэй. <code class="i">(5)</code> бол зүгээр л 5 гэсэн тоо.</div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Ажиллуулахаас өмнө 5-р мөрөнд юу болохыг таамаглуул. tuple-д ердөө 2 арга бий: count() ба index(). Өөрчилдөг арга (append, remove) байхгүй. «lat, lon = ub» задлах (unpacking) нь нэг мөрөөр хоёр хувьсагч үүсгэдэг.</aside>
+</section>
+
+<section class="slide" data-sec="7" data-title="set">
+  <h2>set: давхардалгүй цуглуулга</h2>
+  <p class="lead">Угалзан хаалт <code class="i">{ }</code>. Нэг утга <span class="mk">ганцхан удаа</span> орно. Дараалал, индекс байхгүй.</p>
+  <div class="cols">
+    <div class="stack">
+      <div class="runner" data-ex="setb"></div>
+      <div class="rule"><b>set()</b>Хоосон set ингэж үүсгэнэ. <code class="i">{}</code> бол хоосон dict (дараагийн хичээлд үзнэ).</div>
+    </div>
+    <div class="widget" data-widget="setlab"></div>
+  </div>
+  <aside class="note"><b>Багшид</b>Сонгуулийн жишээ: 7 санал байсан ч хэдэн өөр нэр дэвшигчид санал өгсөн бэ? set давхардлыг автоматаар хасна. remove() ба discard()-ийн ялгааг үзүүл: байхгүй тоог remove() хийвэл KeyError, discard() бол чимээгүй өнгөрнө. s[0] дарж индекс байхгүйг харуул.</aside>
+</section>
+
+<section class="slide" data-sec="7" data-title="set үйлдэл">
+  <h2>set-ийн үйлдэл: хоёр дугуйлан</h2>
+  <div class="widget" data-widget="venn"></div>
+  <aside class="note"><b>Багшид</b>Ангиасаа хоёр дугуйланд явдаг сурагчдын нэрийг асууж талбарт бич. Товч бүрийн өмнө «Хэн гарах вэ?» гэж таамаглуул. Тэмдэг ба аргын нэр ижил үр дүн өгнө: | = union, &amp; = intersection, - = difference, ^ = symmetric_difference.</aside>
+</section>
+
+<section class="slide" data-sec="7" data-title="Харьцуулалт">
+  <h2>list, tuple, set: аль нь хэзээ?</h2>
+  <div class="cols wide-left">
+    <div class="scroll-x">
+      <table class="ttable cmp">
+        <thead><tr><th></th><th>list</th><th>tuple</th><th>set</th></tr></thead>
+        <tbody>
+          <tr><td>Хаалт</td><td><code>[1, 2]</code></td><td><code>(1, 2)</code></td><td><code>{1, 2}</code></td></tr>
+          <tr><td>Өөрчлөх</td><td class="y">Болно</td><td class="n">Болохгүй</td><td class="y">Болно</td></tr>
+          <tr><td>Дараалал</td><td class="y">Хадгална</td><td class="y">Хадгална</td><td class="n">Байхгүй</td></tr>
+          <tr><td>Индекс <code>x[0]</code></td><td class="y">Болно</td><td class="y">Болно</td><td class="n">Болохгүй</td></tr>
+          <tr><td>Давхардал</td><td class="y">Болно</td><td class="y">Болно</td><td class="n">Хасагдана</td></tr>
+          <tr><td>Аргын тоо</td><td>11</td><td>2</td><td>17</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="stack">
+      <span class="tag">Аль нь вэ? Карт дээр дар</span>
+      <div class="which">
+        <button class="wcard" type="button">Дэлгүүрийн сагсан дахь бараа (нэмж, хасна)<span class="ans" hidden>list</span></button>
+        <button class="wcard" type="button">Улаанбаатарын координат<span class="ans" hidden>tuple</span></button>
+        <button class="wcard" type="button">Ангийнхны төрсөн сарууд, давхардалгүй<span class="ans" hidden>set</span></button>
+        <button class="wcard" type="button">Долоо хоногийн 7 өдөр<span class="ans" hidden>tuple</span></button>
+        <button class="wcard" type="button">Шалгалтын оноонууд, эрэмбэлэх хэрэгтэй<span class="ans" hidden>list</span></button>
+        <button class="wcard" type="button">Сайтад нэвтэрсэн өөр өөр хэрэглэгчид<span class="ans" hidden>set</span></button>
+      </div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Карт бүрийг чангаар уншаад гурван хуруугаар санал хураа: 1 хуруу = list, 2 = tuple, 3 = set. Дараа нь карт дээр дарж хариуг харуул.</aside>
+</section>
+
+<section class="slide" data-sec="7" data-title="Аргуудын хүснэгт">
+  <h2>Аргуудын хүснэгт</h2>
+  <div class="mgrid">
+    <div class="mcol"><h3>list <small>[ ]</small></h3>
+      <div class="mrow"><code>append(x)</code><span>төгсгөлд нэмэх</span></div>
+      <div class="mrow"><code>insert(i, x)</code><span>i байрлалд нэмэх</span></div>
+      <div class="mrow"><code>extend(b)</code><span>өөр жагсаалтыг залгах</span></div>
+      <div class="mrow"><code>remove(x)</code><span>эхний x-ийг устгах</span></div>
+      <div class="mrow"><code>pop(i)</code><span>i-г авч устгах (хоосон бол сүүлийнх)</span></div>
+      <div class="mrow"><code>sort()</code><span>эрэмбэлэх</span></div>
+      <div class="mrow"><code>reverse()</code><span>эсрэгээр эргүүлэх</span></div>
+      <div class="mrow"><code>index(x)</code><span>x хаана байна</span></div>
+      <div class="mrow"><code>count(x)</code><span>x хэдэн удаа байна</span></div>
+      <div class="mrow"><code>copy()</code><span>хуулбар үүсгэх</span></div>
+      <div class="mrow"><code>clear()</code><span>бүгдийг устгах</span></div>
+    </div>
+    <div class="stack">
+      <div class="mcol"><h3>tuple <small>( )</small></h3>
+        <div class="mrow"><code>count(x)</code><span>x хэдэн удаа байна</span></div>
+        <div class="mrow"><code>index(x)</code><span>x хаана байна</span></div>
+        <p class="small-note" style="margin-top:.5rem">Өөрчилдөг арга байхгүй. tuple өөрчлөгддөггүй.</p>
+      </div>
+      <div class="mcol"><h3>Гурвуулаа</h3>
+        <div class="mrow"><code>len(x)</code><span>хэдэн элементтэй</span></div>
+        <div class="mrow"><code>v in x</code><span>байгаа эсэх: True / False</span></div>
+        <div class="mrow"><code>min max sum</code><span>хамгийн бага, их, нийлбэр</span></div>
+        <div class="mrow"><code>sorted(x)</code><span>эрэмбэлсэн шинэ list</span></div>
+        <div class="mrow"><code>for v in x:</code><span>нэг бүрээр давтах</span></div>
+      </div>
+    </div>
+    <div class="mcol"><h3>set <small>{ }</small></h3>
+      <div class="mrow"><code>add(x)</code><span>нэмэх</span></div>
+      <div class="mrow"><code>update(b)</code><span>олныг зэрэг нэмэх</span></div>
+      <div class="mrow"><code>remove(x)</code><span>устгах (байхгүй бол KeyError)</span></div>
+      <div class="mrow"><code>discard(x)</code><span>устгах (байхгүй бол алдаагүй)</span></div>
+      <div class="mrow"><code>pop()</code><span>дурын нэгийг авч устгах</span></div>
+      <div class="mrow"><code>clear()</code><span>бүгдийг устгах</span></div>
+      <div class="mrow"><code>a | b  union</code><span>нэгдэл</span></div>
+      <div class="mrow"><code>a &amp; b  intersection</code><span>огтлолцол</span></div>
+      <div class="mrow"><code>a - b  difference</code><span>ялгавар</span></div>
+      <div class="mrow"><code>a ^ b  symmetric_difference</code><span>зөвхөн нэгэнд нь</span></div>
+      <div class="mrow"><code>a &lt;= b  issubset</code><span>a нь b-д бүхэлдээ багтах уу</span></div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Цээжлэх шаардлагагүй. Сурагчид энэ хүснэгтийг утсаараа зураг авч болно. Гол санаа: list арга ихтэй, tuple бараг байхгүй, set математикийн олонлогийн үйлдэлтэй. Хүснэгтэд гол аргуудыг л оруулсан (set-д нийт 17 арга бий).</aside>
 </section>
 
 <!-- ===================== 8. FUNCTIONS ===================== -->
@@ -660,8 +824,11 @@ body.notes .note{display:block}
     <div><code>== != &gt; &lt; and or not</code><span>харьцуулах, логик</span></div>
     <div><code>for i in range(n):</code><span>n удаа давтах</span></div>
     <div><code>while нөхцөл:</code><span>үнэн байх хооронд давтах</span></div>
-    <div><code>[a, b, c]  x[0]</code><span>жагсаалт, индекс 0-ээс</span></div>
-    <div><code>append  len  sum</code><span>жагсаалтын функцүүд</span></div>
+    <div><code>[a, b, c]  x[0]</code><span>list: индекс 0-ээс</span></div>
+    <div><code>.append .insert .pop .sort</code><span>list-ийн аргууд</span></div>
+    <div><code>(a, b)  .count .index</code><span>tuple: өөрчлөгддөггүй</span></div>
+    <div><code>{a, b}  set()  .add</code><span>set: давхардалгүй</span></div>
+    <div><code>|  &amp;  -  ^</code><span>set: нэгдэл, огтлолцол, ялгавар</span></div>
     <div><code>def f(x): return</code><span>функц тодорхойлох</span></div>
     <div><code>import math</code><span>модуль ашиглах</span></div>
   </div>
@@ -733,7 +900,7 @@ const tb = (line, src, msg) => [E("Traceback (most recent call last):"), E(`  Fi
 
 /* ---------------- syntax highlight ---------------- */
 const KW = new Set("def return if elif else for in while import from as and or not True False None pass break continue".split(" "));
-const BI = new Set("print input int float str len range type sum list round".split(" "));
+const BI = new Set("print input int float str len range type sum list round set tuple min max sorted".split(" "));
 const TOK = /(#.*$)|(f?"(?:[^"\\]|\\.)*"?|f?'(?:[^'\\]|\\.)*'?)|(\b\d+(?:\.\d+)?\b)|([A-Za-z_Ѐ-ӿ][\wЀ-ӿ]*)|(\s+)|(.)/g;
 function hlLine(line) {
   let out = "", m;
@@ -882,6 +1049,18 @@ const EX = {
       const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       return [`Өнөөдөр: ${iso}`, `Шинэ он хүртэл ${left} хоног үлдлээ!`];
     }
+  },
+  tup: {
+    code: `ub = (47.92, 106.92)   # Улаанбаатарын координат\nprint(ub[0])\nlat, lon = ub\nprint(f"Өргөрөг {lat}, уртраг {lon}")\nub[0] = 50`,
+    run: () => ["47.92", "Өргөрөг 47.92, уртраг 106.92"].concat(tb(5, "ub[0] = 50", "TypeError: 'tuple' object does not support item assignment"))
+  },
+  tupm: {
+    code: `days = ("Да", "Мя", "Лх", "Пү", "Ба", "Бя", "Ня")\nprint(len(days))\nprint(days.index("Ба"))\n\nmarks = (5, 4, 5, 3, 5)\nprint(marks.count(5))\nprint(max(marks), min(marks))`,
+    run: () => ["7", "4", "3", "5 3"]
+  },
+  setb: {
+    code: `# Ангийн даргын сонгууль: 1, 2, 3-р нэр дэвшигч\nvotes = [3, 1, 3, 2, 1, 3, 3]\nunique = set(votes)\nprint(unique)\nprint(len(unique))\nprint(4 in unique)`,
+    run: () => ["{1, 2, 3}", "3", "False"]
   },
   tools: { file: "tools.py", code: `# tools.py: миний модуль\ndef square(x):\n    return x * x\n\nGREETING = "Сайн уу!"` },
   main: { code: `import tools\n\nprint(tools.square(9))\nprint(tools.GREETING)`, run: () => ["81", "Сайн уу!"] }
@@ -1143,6 +1322,145 @@ W.list = el => {
   upd();
 };
 
+/* list / set method labs: buttons run one method, console shows a Python REPL */
+const cmpPy = (x, y) => typeof x === "number" ? x - y : (x < y ? -1 : x > y ? 1 : 0);
+const pyRepr = v => typeof v === "string" ? (v.includes("'") && !v.includes('"') ? `"${v}"` : pyStr(v)) : String(v);
+const pyList = a => "[" + a.map(pyRepr).join(", ") + "]";
+const pySet = a => a.length ? "{" + a.slice().sort(cmpPy).map(pyRepr).join(", ") + "}" : "set()";
+function makeLab(el, cfg) {
+  let data;
+  el.innerHTML = `<div class="cols">
+    <div class="stack">
+      <div class="lab-vis"></div>
+      <div class="lab-x"><label for="${cfg.id}-x">x =</label><input id="${cfg.id}-x" value="${esc(cfg.x)}" autocomplete="off"></div>
+      <div class="lab-btns">${cfg.ops.map((o, i) => `<button class="btn${o.bad ? " bad" : ""}" type="button" data-i="${i}"></button>`).join("")}</div>
+      ${cfg.foot ? `<p class="small-note">${cfg.foot}</p>` : ""}
+    </div>
+    <div class="runner"><div class="code-head"><span class="file">Python REPL</span><span class="spacer"></span><button class="btn sm rs" type="button">Эхнээс</button></div>
+      <div class="console tall" aria-live="polite"><div class="console-body"></div></div></div>
+  </div>`;
+  const inp = $(`#${cfg.id}-x`, el), con = $(".console-body", el), vis = $(".lab-vis", el), btns = $$(".lab-btns .btn", el);
+  const say = (t, cls = "", v) => {
+    const d = document.createElement("div"); d.className = "out " + cls; d.textContent = t;
+    if (v !== undefined) { const s = document.createElement("span"); s.className = "v"; s.textContent = v; d.appendChild(s); }
+    con.appendChild(d); con.parentElement.scrollTop = 1e6;
+  };
+  const labels = () => { const xv = cfg.parse(inp.value); btns.forEach((b, i) => b.textContent = cfg.ops[i].code(xv === null ? "?" : xv)); };
+  function reset() { data = cfg.init.slice(); con.innerHTML = ""; say(">>> ", "pr", cfg.initCode); cfg.draw(vis, data); }
+  btns.forEach((b, i) => b.addEventListener("click", () => {
+    const op = cfg.ops[i], xv = cfg.parse(inp.value);
+    if (op.needsX && xv === null) { say(cfg.badX, "hint"); return; }
+    const code = op.code(xv), r = op.run(data, xv);
+    say(">>> ", "pr", code);
+    if (r.err) { say("Traceback (most recent call last):", "err"); say('  File "<stdin>", line 1, in <module>', "err"); say(r.err, "err"); }
+    else {
+      if (r.ret !== undefined) say(r.ret);
+      if (r.mut) { say(">>> ", "pr", cfg.name); say(cfg.repr(data)); }
+    }
+    cfg.draw(vis, data, r.hi);
+  }));
+  inp.addEventListener("input", labels);
+  $(".rs", el).addEventListener("click", reset);
+  labels(); reset();
+}
+
+W.listlab = el => {
+  const q = v => `"${v}"`;
+  makeLab(el, {
+    id: "ll", name: "bag", x: "алим", init: ["ном", "үзэг", "дэвтэр"], initCode: 'bag = ["ном", "үзэг", "дэвтэр"]',
+    parse: s => { const v = String(s).replace(/["']/g, "").trim(); return v || null; },
+    badX: "x талбарт ямар нэг үг бич.", repr: pyList,
+    draw(vis, d, hi) {
+      vis.innerHTML = d.length ? `<div class="scroll-x"><div class="lst">${d.map((v, i) => `<div class="cell static${i === hi ? " sel" : ""}"><span class="ix">${i}</span><span class="v${i === hi ? " pop" : ""}">${esc(v)}</span></div>`).join("")}</div></div>` : `<div class="lst-empty">[ ]  хоосон жагсаалт</div>`;
+    },
+    ops: [
+      { needsX: 1, code: v => `bag.append(${q(v)})`, run: (d, v) => { d.push(v); return { mut: 1, hi: d.length - 1 }; } },
+      { needsX: 1, code: v => `bag.insert(0, ${q(v)})`, run: (d, v) => { d.unshift(v); return { mut: 1, hi: 0 }; } },
+      { needsX: 1, bad: 1, code: v => `bag.remove(${q(v)})`, run: (d, v) => { const i = d.indexOf(v); if (i < 0) return { err: "ValueError: list.remove(x): x not in list" }; d.splice(i, 1); return { mut: 1 }; } },
+      { bad: 1, code: () => "bag.pop()", run: d => d.length ? { ret: pyRepr(d.pop()), mut: 1 } : { err: "IndexError: pop from empty list" } },
+      { code: () => "bag.sort()", run: d => { d.sort(cmpPy); return { mut: 1 }; } },
+      { code: () => "bag.reverse()", run: d => { d.reverse(); return { mut: 1 }; } },
+      { needsX: 1, code: v => `bag.count(${q(v)})`, run: (d, v) => ({ ret: String(d.filter(e => e === v).length) }) },
+      { needsX: 1, bad: 1, code: v => `bag.index(${q(v)})`, run: (d, v) => { const i = d.indexOf(v); return i < 0 ? { err: `ValueError: ${pyRepr(v)} is not in list` } : { ret: String(i), hi: i }; } },
+      { needsX: 1, code: v => `${q(v)} in bag`, run: (d, v) => ({ ret: d.includes(v) ? "True" : "False" }) },
+      { code: () => "len(bag)", run: d => ({ ret: String(d.length) }) },
+      { code: () => "bag.clear()", run: d => { d.length = 0; return { mut: 1 }; } }
+    ]
+  });
+};
+
+W.setlab = el => {
+  makeLab(el, {
+    id: "sl", name: "s", x: "5", init: [3, 1, 4], initCode: "s = {3, 1, 4}",
+    parse: s => { const v = toInt(s); return v === null || v < -999n || v > 999n ? null : Number(v); },
+    badX: "x талбарт -999-өөс 999 хүртэлх бүхэл тоо бич.", repr: pySet,
+    foot: "set-д индекс, дараалал байхгүй. Python элементүүдийг өөрийнхөөрөө байрлуулна.",
+    draw(vis, d, hi) {
+      vis.innerHTML = `<div class="setbag">${d.length ? d.slice().sort(cmpPy).map(v => `<span class="chip${v === hi ? " sel pop" : ""}">${v}</span>`).join("") : `<span class="lst-empty">set()  хоосон</span>`}</div>`;
+    },
+    ops: [
+      { needsX: 1, code: v => `s.add(${v})`, run: (d, v) => { if (!d.includes(v)) d.push(v); return { mut: 1, hi: v }; } },
+      { needsX: 1, bad: 1, code: v => `s.remove(${v})`, run: (d, v) => { const i = d.indexOf(v); if (i < 0) return { err: `KeyError: ${v}` }; d.splice(i, 1); return { mut: 1 }; } },
+      { needsX: 1, code: v => `s.discard(${v})`, run: (d, v) => { const i = d.indexOf(v); if (i >= 0) d.splice(i, 1); return { mut: 1 }; } },
+      { needsX: 1, code: v => `${v} in s`, run: (d, v) => ({ ret: d.includes(v) ? "True" : "False", hi: d.includes(v) ? v : undefined }) },
+      { code: () => "len(s)", run: d => ({ ret: String(d.length) }) },
+      { bad: 1, code: () => "s[0]", run: () => ({ err: "TypeError: 'set' object is not subscriptable" }) },
+      { code: () => "s.clear()", run: d => { d.length = 0; return { mut: 1 }; } }
+    ]
+  });
+};
+
+W.venn = el => {
+  const OPS = [
+    { op: "robot | chess", m: "robot.union(chess)", say: "Аль нэгэнд нь явдаг", z: [1, 1, 1] },
+    { op: "robot & chess", m: "robot.intersection(chess)", say: "Хоёуланд нь явдаг", z: [0, 1, 0] },
+    { op: "robot - chess", m: "robot.difference(chess)", say: "Зөвхөн роботод", z: [1, 0, 0] },
+    { op: "chess - robot", m: "chess.difference(robot)", say: "Зөвхөн шатарт", z: [0, 0, 1] },
+    { op: "robot ^ chess", m: "robot.symmetric_difference(chess)", say: "Аль нэгэнд нь л", z: [1, 0, 1] }
+  ];
+  el.innerHTML = `<div class="cols">
+    <div class="stack">
+      <label class="lab-x" for="vn-a">robot =<input id="vn-a" class="wide" value="Анар, Бат, Сараа, Тэмүүлэн" autocomplete="off"></label>
+      <label class="lab-x" for="vn-b">chess =<input id="vn-b" class="wide" value="Бат, Тэмүүлэн, Номин" autocomplete="off"></label>
+      <div class="venn"></div>
+    </div>
+    <div class="stack">
+      <div class="setops">${OPS.map((o, i) => `<button class="btn" type="button" data-i="${i}"><code>${esc(o.op)}</code><small>${esc(o.say)}</small></button>`).join("")}</div>
+      <div class="runner"><div class="cw"></div><div class="console" aria-live="polite"><div class="console-label">Гаралт</div><div class="console-body"></div></div></div>
+    </div></div>`;
+  const a = $("#vn-a", el), b = $("#vn-b", el), con = $(".console-body", el);
+  let cur = 1;
+  const uniq = s => [...new Set(names(s))];
+  function svgText(list, x, on) {
+    const shown = list.slice(0, 6), more = list.length - shown.length, n = shown.length + (more > 0 ? 1 : 0);
+    return shown.map((t, i) => `<text x="${x}" y="${195 + (i - (n - 1) / 2) * 25}" class="${on ? "on" : ""}">${esc(t)}</text>`).join("")
+      + (more > 0 ? `<text x="${x}" y="${195 + (n - 1 - (n - 1) / 2) * 25}" class="${on ? "on" : ""}">+${more}</text>` : "");
+  }
+  function upd() {
+    const A = uniq(a.value), B = uniq(b.value);
+    const onlyA = A.filter(x => !B.includes(x)), both = A.filter(x => B.includes(x)), onlyB = B.filter(x => !A.includes(x));
+    const o = OPS[cur], z = o.z;
+    $(".venn", el).innerHTML = `<svg viewBox="0 0 500 350" role="img" aria-label="Хоёр олонлогийн диаграм">
+      <defs><clipPath id="vn-cb"><circle cx="320" cy="195" r="150"/></clipPath>
+        <mask id="vn-na"><rect width="500" height="350" fill="#fff"/><circle cx="180" cy="195" r="150" fill="#000"/></mask>
+        <mask id="vn-nb"><rect width="500" height="350" fill="#fff"/><circle cx="320" cy="195" r="150" fill="#000"/></mask></defs>
+      <circle class="z${z[0] ? " on" : ""}" cx="180" cy="195" r="150" mask="url(#vn-nb)"/>
+      <circle class="z${z[2] ? " on" : ""}" cx="320" cy="195" r="150" mask="url(#vn-na)"/>
+      <circle class="z${z[1] ? " on" : ""}" cx="180" cy="195" r="150" clip-path="url(#vn-cb)"/>
+      <circle class="ring" cx="180" cy="195" r="150"/><circle class="ring" cx="320" cy="195" r="150"/>
+      <text class="lbl" x="100" y="26">robot</text><text class="lbl" x="400" y="26">chess</text>
+      ${svgText(onlyA, 102, z[0])}${svgText(both, 250, z[1])}${svgText(onlyB, 398, z[2])}</svg>`;
+    const lit = s => `{${s.map(x => `"${x}"`).join(", ")}}`;
+    $(".cw", el).innerHTML = codeHTML(`robot = ${A.length ? lit(A) : "set()"}\nchess = ${B.length ? lit(B) : "set()"}\n\nprint(${o.op})\nprint(${o.m})`);
+    mark($(".code", el), [4, 5]);
+    const res = [].concat(z[0] ? onlyA : [], z[1] ? both : [], z[2] ? onlyB : []);
+    printTo(con, [pySet(res), pySet(res), H(`${res.length} хүн. set-ийн дараалал Python дээр өөр байж болно.`)], 0);
+    $$(".setops .btn", el).forEach((x, i) => x.classList.toggle("on", i === cur));
+  }
+  $$(".setops .btn", el).forEach(x => x.addEventListener("click", () => { cur = +x.dataset.i; upd(); }));
+  a.addEventListener("input", upd); b.addEventListener("input", upd); upd();
+};
+
 W.machine = el => {
   el.innerHTML = `<div class="stack">
     <div class="machine">
@@ -1232,6 +1550,9 @@ W.quiz = el => {
     { code: `x = "7"\nprint(x * 2)`, q: "Юу хэвлэх вэ?", o: ["14", "77", "7 2", "Алдаа"], a: 1, why: "x текст тул * 2 нь текстийг 2 удаа давтана." },
     { code: `for i in range(2, 5):\n    print(i)`, q: "Хэдэн мөр хэвлэх вэ?", o: ["2", "3", "4", "5"], a: 1, why: "2, 3, 4 гэж хэвлэнэ. stop буюу 5 ордоггүй." },
     { code: `nums = [4, 8, 15, 16]\nprint(nums[1])`, q: "Юу хэвлэх вэ?", o: ["4", "8", "15", "IndexError"], a: 1, why: "Индекс 0-ээс эхэлнэ: nums[0] = 4, nums[1] = 8." },
+    { code: `a = [1, 2, 3]\na.append(4)\na.pop(0)\nprint(a)`, q: "Юу хэвлэх вэ?", o: ["[1, 2, 3, 4]", "[2, 3, 4]", "[1, 2, 3]", "[4, 2, 3]"], a: 1, why: "append(4) төгсгөлд 4 нэмнэ, pop(0) эхний элемент 1-ийг авч хаяна." },
+    { code: `p = (1, 2, 3)\np[0] = 9`, q: "Юу болох вэ?", o: ["(9, 2, 3)", "TypeError", "(1, 2, 3)", "9"], a: 1, why: "tuple өөрчлөгддөггүй, тиймээс TypeError гарна." },
+    { code: `s = {2, 2, 3, 3, 3}\nprint(len(s))`, q: "Юу хэвлэх вэ?", o: ["5", "3", "2", "1"], a: 2, why: "set давхардлыг хасна: {2, 3}. Хоёр элемент." },
     { code: `score = 75\nif score >= 80:\n    print("Сайн")\nelif score >= 70:\n    print("Дунд")\nelse:\n    print("Хичээ")`, q: "Юу хэвлэх вэ?", o: ["Сайн", "Дунд", "Хичээ", "Дунд, Хичээ хоёулаа"], a: 1, why: "75 >= 80 худал, 75 >= 70 үнэн. Зөвхөн эхний үнэн салбар ажиллана." },
     { code: `def double(n):\n    return n * 2\n\nprint(double(double(3)))`, q: "Юу хэвлэх вэ?", o: ["6", "9", "12", "Алдаа"], a: 2, why: "Дотроос нь эхэлнэ: double(3) = 6, дараа нь double(6) = 12." },
     { code: `import random\nx = random.randint(1, 6)`, q: "x ямар утга авч болох вэ?", o: ["0-ээс 6", "1-ээс 5", "1-ээс 6", "Зөвхөн 6"], a: 2, why: "randint(a, b) нь a, b хоёуланг нь оруулна. range()-ээс ялгаатай!" }
@@ -1266,21 +1587,24 @@ $$("[data-reveal]").forEach(b => $("[data-reveal-btn]", b).addEventListener("cli
   $(".why", b).hidden = false;
 }));
 
+/* "which one?" cards (list / tuple / set) */
+$$(".wcard").forEach(c => c.addEventListener("click", () => { $(".ans", c).hidden = false; }));
+
 $$(".runner[data-ex]").forEach(mountRunner);
 $$("[data-widget]").forEach(el => W[el.dataset.widget](el));
 
 /* ---------------- lesson structure ---------------- */
 const SECS = [
-  { name: "Нээлт", from: 0, to: 6, ds: "Програм гэж юу вэ? «Робот багш» дасгал" },
-  { name: "print()", from: 6, to: 12, ds: "Анхны програм, тайлбар, алдаа унших" },
-  { name: "Хувьсагч", from: 12, to: 22, ds: "Нэртэй хайрцаг, 4 төрөл, input()" },
-  { name: "Үйлдэл", from: 22, to: 30, ds: "Арифметик, // ба %, f-string" },
-  { name: "Нөхцөл", from: 30, to: 40, ds: "if / elif / else, «Босоорой» тоглоом" },
-  { name: "Давталт", from: 40, to: 52, ds: "for, range(), мөшгөх хүснэгт, while" },
-  { name: "Жагсаалт", from: 52, to: 60, ds: "Индекс 0-ээс, append, len, sum" },
-  { name: "Функц", from: 60, to: 68, ds: "def, параметр, return ба print" },
-  { name: "Модуль", from: 68, to: 74, ds: "import math, datetime, random, өөрийн модуль" },
-  { name: "Дүгнэлт", from: 74, to: 80, ds: "Тоо таах тоглоом, сорил, 3-2-1" }
+  { name: "Нээлт", from: 0, to: 4, ds: "Програм гэж юу вэ? «Робот багш» дасгал" },
+  { name: "print()", from: 4, to: 9, ds: "Анхны програм, тайлбар, алдаа унших" },
+  { name: "Хувьсагч", from: 9, to: 17, ds: "Нэртэй хайрцаг, 4 төрөл, input()" },
+  { name: "Үйлдэл", from: 17, to: 23, ds: "Арифметик, // ба %, f-string" },
+  { name: "Нөхцөл", from: 23, to: 32, ds: "if / elif / else, «Босоорой» тоглоом" },
+  { name: "Давталт", from: 32, to: 41, ds: "for, range(), мөшгөх хүснэгт, while" },
+  { name: "list · tuple · set", from: 41, to: 57, ds: "Индекс, list/tuple/set-ийн аргууд, олонлогийн үйлдэл" },
+  { name: "Функц", from: 57, to: 65, ds: "def, параметр, return ба print" },
+  { name: "Модуль", from: 65, to: 72, ds: "import math, datetime, random, өөрийн модуль" },
+  { name: "Дүгнэлт", from: 72, to: 80, ds: "Тоо таах тоглоом, сорил, 3-2-1" }
 ];
 const slides = $$(".slide"), stage = $("#stage"), rail = $("#rail");
 const firstOf = s => slides.findIndex(x => +x.dataset.sec === s);
