@@ -35,3 +35,13 @@
 
 - `python-hicheel.html` — эх файл (Claude Artifact хэлбэр)
 - `index.html` — `./build.sh` ажиллуулж үүсгэсэн, шууд нээх бүрэн HTML
+
+## Netlify дээр байрлуулах
+
+`netlify.toml` бэлэн байгаа тул build хийх шаардлагагүй, `index.html` шууд нийтлэгдэнэ.
+
+1. app.netlify.com → **Add new site → Import an existing project → GitHub** → `DulguunSe/11-` репог сонгоно.
+2. Branch to deploy: `claude/bold-dirac-vtu77v` (эсвэл main руу merge хийсний дараа `main`). Build command болон publish directory-г хоосон үлдээнэ (`netlify.toml`-оос уншина).
+3. **Deploy** дарна. Дараа нь Site configuration → **Change site name** дээр жишээ нь `python-11` гэж өгвөл хаяг `python-11.netlify.app` болно.
+
+Хамгийн хурдан арга: app.netlify.com/drop хуудсанд `index.html`-тэй хавтсыг чирж оруулна.
