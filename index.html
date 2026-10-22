@@ -1,0 +1,1375 @@
+<!doctype html>
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>Python: эхний алхам</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Layout: projector stage, one slide at a time. Header = lesson rail (segment width = minutes) + timer, footer = navigation. */
+:root{
+  --bg:#EBEFF5; --surface:#FFFFFF; --ink:#13203A; --muted:#56627B; --rule:#CDD5E2;
+  --blue:#2A66B0; --blue-soft:#DCE7F6; --mark:#FFD43B; --mark-ink:#13203A; --hl:#FFE680;
+  --code-bg:#15203A; --code-fg:#E3E9F4; --code-dim:#6F7E9C; --code-line:#24345F; --console-bg:#0D152A;
+  --c-kw:#8CC2FF; --c-str:#FFD98A; --c-num:#FFA98A; --c-fn:#90E2B5; --c-fx:#F4B6FF; --c-err:#FF8F85; --c-val:#9FE7FF;
+  --ok:#1C7F4E; --ok-soft:#D9F0E3; --err:#B9342A; --err-soft:#F8DEDA;
+  --f-display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --f-body:"Golos Text","Segoe UI",Roboto,system-ui,sans-serif;
+  --f-code:"JetBrains Mono",Consolas,"Courier New",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1422; --surface:#172034; --ink:#E6EBF4; --muted:#9AA6BE; --rule:#2B3750;
+    --blue:#7DB0F2; --blue-soft:#1E2E4C; --mark:#FFD43B; --mark-ink:#13203A; --hl:#4A4220;
+    --code-bg:#0A1020; --code-line:#1F2D52; --console-bg:#060B17;
+    --ok:#5BD093; --ok-soft:#173527; --err:#FF8F85; --err-soft:#3D1D1D;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1422; --surface:#172034; --ink:#E6EBF4; --muted:#9AA6BE; --rule:#2B3750;
+  --blue:#7DB0F2; --blue-soft:#1E2E4C; --mark:#FFD43B; --mark-ink:#13203A; --hl:#4A4220;
+  --code-bg:#0A1020; --code-line:#1F2D52; --console-bg:#060B17;
+  --ok:#5BD093; --ok-soft:#173527; --err:#FF8F85; --err-soft:#3D1D1D;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+html{font-size:clamp(14px, calc(0.6vw + 0.55vh + 5px), 24px); height:100%}
+body{height:100%; margin:0; background:var(--bg); color:var(--ink); font-family:var(--f-body); line-height:1.5}
+*{box-sizing:border-box}
+button,input{font:inherit; color:inherit}
+/* JetBrains Mono ligatures turn >= into ≥; students must see the characters they will type */
+code,pre,kbd,.code,.console,.trace,.chip,.field,.calc-in,.range-in,.idx-in,.m-in,.m-box,.m-out,.checks,.box-val,.box-name,.box-type,.sheet,.op,.opt,.file,.timer-t,.hist{font-variant-ligatures:none; font-feature-settings:"calt" 0, "liga" 0}
+:focus-visible{outline:3px solid var(--blue); outline-offset:2px}
+
+.app{height:100%; display:grid; grid-template-rows:auto 1fr auto}
+.gutter{padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px))}
+
+/* ---------- header ---------- */
+.top{display:flex; align-items:center; gap:1.2rem; padding-block:.6rem; background:var(--surface); border-bottom:1px solid var(--rule)}
+.brand{font-family:var(--f-display); font-weight:700; font-size:1rem; white-space:nowrap; display:flex; align-items:baseline; gap:.5rem}
+.brand small{font-family:var(--f-body); font-weight:500; font-size:.8rem; color:var(--muted)}
+.rail{flex:1; display:flex; gap:3px; min-width:0}
+.seg{flex-basis:0; min-width:0; border:0; background:none; padding:0; cursor:pointer; display:flex; flex-direction:column; gap:.25rem; text-align:left}
+.seg-bar{height:.45rem; border-radius:3px; background:var(--rule)}
+.seg.done .seg-bar{background:var(--blue)}
+.seg.cur .seg-bar{background:var(--mark); box-shadow:0 0 0 1.5px var(--mark-ink) inset}
+.seg-l{font-size:.68rem; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.seg.cur .seg-l{color:var(--ink); font-weight:600}
+.timer{display:flex; align-items:center; gap:.4rem; font-variant-numeric:tabular-nums}
+.timer-t{font-family:var(--f-code); font-weight:600; font-size:1.05rem; min-width:7.6rem; text-align:right}
+.timer-t small{font-weight:400; color:var(--muted)}
+.timer.late .timer-t{color:var(--err)}
+.icon-btn{border:1.5px solid var(--rule); background:var(--surface); border-radius:8px; padding:.25rem .55rem; cursor:pointer; font-size:.85rem}
+.icon-btn:hover{border-color:var(--ink)}
+
+/* ---------- stage & slides ---------- */
+.stage{overflow-y:auto; overflow-x:hidden; position:relative}
+.slide{max-width:82rem; margin-inline:auto; min-height:100%; padding-block:1.6rem 2.2rem; display:flex; flex-direction:column; justify-content:center; gap:1.3rem; animation:enter .28s ease-out}
+@keyframes enter{from{opacity:.35; transform:translateY(10px)} to{opacity:1; transform:none}}
+@media (prefers-reduced-motion: reduce){ .slide{animation:none} .pop{animation:none!important} }
+.eyebrow{display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; font-size:.85rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:600}
+.eyebrow .num{font-family:var(--f-display); color:var(--mark-ink); background:var(--mark); padding:.05rem .45rem; border-radius:4px; letter-spacing:0}
+h1,h2{font-family:var(--f-display); font-weight:700; line-height:1.12; margin:0; text-wrap:balance; letter-spacing:-.01em}
+h1{font-size:clamp(2.2rem, 5.2vw, 4.4rem)}
+h2{font-size:clamp(1.6rem, 3vw, 2.5rem)}
+h3{font-size:1.15rem; margin:0 0 .4rem; font-weight:700}
+p{margin:0}
+.lead{font-size:1.3rem; max-width:48rem; color:var(--muted)}
+.lead b,.lead strong{color:var(--ink)}
+.mk{background:linear-gradient(transparent 58%, var(--hl) 58% 92%, transparent 92%); padding-inline:.1em}
+code.i{font-family:var(--f-code); font-size:.92em; background:var(--blue-soft); padding:.05em .35em; border-radius:4px; white-space:nowrap}
+.cols{display:grid; gap:1.4rem; grid-template-columns:repeat(auto-fit, minmax(min(100%, 25rem), 1fr)); align-items:start}
+.cols > *{min-width:0}
+.cols.wide-left{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+@media (max-width: 860px){ .cols.wide-left{grid-template-columns:1fr} }
+.stack{display:flex; flex-direction:column; gap:1rem; min-width:0}
+.card{background:var(--surface); border:1px solid var(--rule); border-radius:14px; padding:1.1rem 1.25rem}
+.tag{display:inline-flex; align-items:center; gap:.4rem; font-size:.75rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; background:var(--mark); color:var(--mark-ink); padding:.15rem .55rem; border-radius:999px}
+.activity{border:2px dashed var(--ink); border-radius:14px; padding:1.1rem 1.25rem; display:flex; flex-direction:column; gap:.6rem}
+.activity p{font-size:1.1rem}
+ul.clean{margin:0; padding-left:1.2rem; display:flex; flex-direction:column; gap:.35rem; font-size:1.1rem}
+.rules{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%,15rem),1fr)); gap:.8rem}
+.rule{background:var(--surface); border:1px solid var(--rule); border-radius:12px; padding:.8rem 1rem; font-size:1.02rem}
+.rule b{display:block; font-family:var(--f-code); font-size:1.1rem; margin-bottom:.15rem}
+
+/* ---------- code ---------- */
+.code{margin:0; background:var(--code-bg); color:var(--code-fg); font-family:var(--f-code); font-size:1.08rem; line-height:1.6; padding:.8rem 0; overflow-x:auto; counter-reset:ln}
+.code code{display:block; min-width:max-content}
+.ln{display:block; white-space:pre; padding:0 1.1rem 0 0; transition:background .2s, opacity .2s}
+.ln::before{counter-increment:ln; content:counter(ln); display:inline-block; width:2.6rem; padding-right:.9rem; text-align:right; color:var(--code-dim); user-select:none}
+.ln.on{background:var(--code-line); box-shadow:inset 5px 0 var(--mark)}
+.ln.no{opacity:.75; background:linear-gradient(90deg, rgba(255,143,133,.14), transparent)}
+.ln.skip{opacity:.35}
+.t-kw{color:var(--c-kw); font-weight:600} .t-str{color:var(--c-str)} .t-num{color:var(--c-num)} .t-fn{color:var(--c-fn)} .t-def{color:var(--c-fn)} .t-com{color:var(--code-dim); font-style:italic} .t-fx{color:var(--c-fx)}
+.runner{border-radius:14px; overflow:hidden; border:1px solid var(--code-line); background:var(--code-bg); display:flex; flex-direction:column; min-width:0}
+.code-head{display:flex; align-items:center; gap:.6rem; padding:.55rem .7rem .55rem 1rem; background:var(--console-bg); color:var(--code-fg)}
+.file{font-family:var(--f-code); font-size:.85rem; color:var(--code-dim)}
+.spacer{flex:1}
+.inputs{display:flex; flex-wrap:wrap; gap:.6rem 1rem; padding:.7rem 1rem; background:var(--console-bg); border-top:1px solid var(--code-line)}
+.field{display:flex; align-items:center; gap:.5rem; font-family:var(--f-code); font-size:.9rem; color:var(--code-dim)}
+.field input{width:9rem; background:var(--code-bg); color:var(--code-fg); border:1.5px solid var(--code-line); border-radius:6px; padding:.3rem .5rem; font-family:var(--f-code); font-size:1rem}
+.field input.wide{width:16rem; max-width:60vw}
+.console{background:var(--console-bg); color:var(--code-fg); font-family:var(--f-code); font-size:1.05rem; padding:.7rem 1rem .9rem; border-top:1px solid var(--code-line); min-height:4.2rem}
+.console-label{font-family:var(--f-body); font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--code-dim); margin-bottom:.3rem}
+.out{white-space:pre-wrap; word-break:break-word; animation:type .18s ease-out}
+.out.err{color:var(--c-err)}
+.out .v{color:var(--c-val)}
+.out.hint{color:var(--code-dim); font-family:var(--f-body); font-style:italic}
+.out.ph{color:var(--code-dim)}
+@keyframes type{from{opacity:0; transform:translateX(-4px)} to{opacity:1; transform:none}}
+
+/* ---------- buttons ---------- */
+.btn{font-weight:600; font-size:1rem; padding:.5em 1em; border-radius:9px; border:2px solid var(--ink); background:var(--surface); color:var(--ink); cursor:pointer; white-space:nowrap}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:none}
+.btn.primary{background:var(--mark); color:var(--mark-ink); border-color:var(--mark-ink)}
+.btn.sm{font-size:.85rem; padding:.35em .75em}
+.code-head .btn{border-color:var(--mark); }
+.code-head .btn:not(.primary){background:transparent; color:var(--code-fg); border-color:var(--code-dim)}
+.btn-row{display:flex; flex-wrap:wrap; gap:.6rem; align-items:center}
+
+/* ---------- footer ---------- */
+.bottom{display:flex; align-items:center; gap:.8rem; padding-block:.55rem; background:var(--surface); border-top:1px solid var(--rule); flex-wrap:wrap}
+.count{font-variant-numeric:tabular-nums; color:var(--muted); font-size:.9rem; flex:1; min-width:8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.count b{color:var(--ink)}
+kbd{font-family:var(--f-code); font-size:.8em; border:1px solid var(--rule); border-bottom-width:2px; border-radius:4px; padding:0 .3em; background:var(--bg)}
+
+/* ---------- notes ---------- */
+.note{display:none; border-top:2px dashed var(--rule); padding-top:.9rem; color:var(--muted); font-size:1rem; max-width:60rem}
+.note b:first-child{color:var(--blue); text-transform:uppercase; letter-spacing:.06em; font-size:.8rem; margin-right:.4rem}
+body.notes .note{display:block}
+
+/* ---------- title slide ---------- */
+.hero{display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:2.4rem; align-items:center}
+@media (max-width: 900px){ .hero{grid-template-columns:1fr} }
+.hero h1 .py{background:linear-gradient(transparent 62%, var(--mark) 62% 94%, transparent 94%); color:var(--ink)}
+.keys{display:flex; flex-wrap:wrap; gap:.4rem 1.2rem; color:var(--muted); font-size:.95rem}
+
+/* ---------- plan ---------- */
+.plan{display:flex; flex-direction:column; gap:.35rem}
+.plan-row{display:grid; grid-template-columns:2.2rem 7.5rem 5.8rem 1fr; gap:.8rem; align-items:center; text-align:left; border:0; border-bottom:1px solid var(--rule); background:none; padding:.45rem .2rem; cursor:pointer; font-size:1.02rem}
+.plan-row:hover{background:var(--blue-soft)}
+.plan-row .n{font-family:var(--f-display); font-weight:700; color:var(--blue)}
+.plan-row .nm{font-weight:700}
+.plan-row .mn{font-family:var(--f-code); font-size:.9rem; color:var(--muted)}
+.plan-row .ds{color:var(--muted); min-width:0}
+@media (max-width: 640px){ .plan-row{grid-template-columns:1.8rem 1fr auto} .plan-row .ds{grid-column:2 / -1} }
+
+/* ---------- facts ---------- */
+.facts{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap:1rem}
+.fact{border-top:4px solid var(--ink); padding-top:.7rem}
+.fact .big{font-family:var(--f-display); font-size:1.7rem; font-weight:700; display:block; margin-bottom:.25rem}
+.choice-q{display:flex; flex-direction:column; gap:.7rem}
+.opts{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap:.7rem}
+.opt{display:flex; gap:.8rem; align-items:center; text-align:left; font-size:1.12rem; padding:.75rem 1rem; border-radius:12px; border:2px solid var(--rule); background:var(--surface); cursor:default}
+.opt .k{font-family:var(--f-display); font-weight:700; font-size:1.3rem; width:2.2rem; height:2.2rem; display:grid; place-items:center; border-radius:50%; background:var(--blue-soft); color:var(--ink); flex:none}
+.opt code{font-family:var(--f-code)}
+.opt.right{border-color:var(--ok); background:var(--ok-soft)}
+.opt.right .k{background:var(--ok); color:var(--surface)}
+.opt.dim{opacity:.4}
+.why{font-size:1.1rem; padding:.7rem 1rem; border-radius:10px; background:var(--ok-soft); color:var(--ink)}
+
+/* ---------- variable boxes ---------- */
+.mem{display:flex; flex-wrap:wrap; gap:1.5rem 1rem; align-content:flex-start; min-height:9rem; padding:1.6rem 1rem 1rem; border:2px dashed var(--rule); border-radius:14px; position:relative}
+.mem::before{content:"Санах ой"; position:absolute; top:-.75rem; left:1rem; background:var(--bg); padding:0 .5rem; font-size:.8rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+.box{min-width:8rem; border:2.5px solid var(--ink); border-top-width:6px; border-radius:4px 4px 12px 12px; background:var(--surface); padding:.9rem .9rem .5rem; position:relative; display:flex; flex-direction:column; gap:.1rem}
+.box-name{position:absolute; top:-.95rem; left:.6rem; font-family:var(--f-code); font-weight:600; font-size:.95rem; background:var(--mark); color:var(--mark-ink); padding:0 .45rem; border-radius:4px}
+.box-val{font-family:var(--f-code); font-size:1.5rem; font-weight:600; display:flex; align-items:baseline; gap:.5rem; flex-wrap:wrap}
+.box-val s{font-size:1rem; color:var(--err); font-weight:400}
+.box-type{font-size:.8rem; color:var(--muted); font-family:var(--f-code)}
+.pop{animation:pop .45s ease-out}
+@keyframes pop{0%{transform:scale(.85)} 60%{transform:scale(1.06)} 100%{transform:none}}
+.say{font-size:1.15rem; min-height:3.4rem; padding:.7rem 1rem; background:var(--surface); border-radius:10px; border:1px solid var(--rule)}
+
+/* ---------- types table ---------- */
+.ttable{width:100%; border-collapse:collapse; font-size:1.05rem}
+.ttable th,.ttable td{text-align:left; padding:.55rem .7rem; border-bottom:1px solid var(--rule); vertical-align:top}
+.ttable th{font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+.ttable td:first-child{font-family:var(--f-code); font-weight:600; color:var(--blue)}
+.ttable td code{font-family:var(--f-code)}
+.scroll-x{overflow-x:auto; max-width:100%}
+
+/* ---------- calculator ---------- */
+.calc-in{display:flex; flex-wrap:wrap; gap:1rem; align-items:center; font-family:var(--f-code); font-size:1.3rem}
+.calc-in input{width:7rem; font-family:var(--f-code); font-size:1.5rem; padding:.3rem .6rem; border-radius:8px; border:2px solid var(--ink); background:var(--surface)}
+.ops{display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 12.5rem), 1fr)); gap:.8rem}
+.op{background:var(--surface); border:1px solid var(--rule); border-radius:12px; padding:.75rem .9rem; display:flex; flex-direction:column; gap:.2rem; min-width:0}
+.op.new{border:2px solid var(--ink)}
+.op .ex{font-family:var(--f-code); font-size:1.05rem; color:var(--muted)}
+.op .res{font-family:var(--f-code); font-size:1.7rem; font-weight:600; word-break:break-all}
+.op .nm{font-size:.85rem; color:var(--muted); display:flex; gap:.4rem; align-items:center}
+.op .res.err{color:var(--err); font-size:1rem}
+
+/* ---------- grade ---------- */
+.slider{display:flex; align-items:center; gap:1rem; flex-wrap:wrap}
+.slider input[type=range]{flex:1; min-width:12rem; accent-color:var(--blue); height:2rem}
+.slider .val{font-family:var(--f-display); font-weight:700; font-size:2.4rem; min-width:4.5rem; text-align:right; font-variant-numeric:tabular-nums}
+.checks{display:flex; flex-direction:column; gap:.35rem; font-family:var(--f-code); font-size:1.05rem}
+.chk{padding:.35rem .7rem; border-radius:8px; background:var(--surface); border:1px solid var(--rule)}
+.chk.f{color:var(--muted)}
+.chk.t{border-color:var(--ok); background:var(--ok-soft); color:var(--ink); font-weight:600}
+.grade-big{font-family:var(--f-display); font-size:5rem; font-weight:700; line-height:1}
+
+/* ---------- stand-up game ---------- */
+.game{display:flex; flex-direction:column; gap:1.1rem; align-items:flex-start}
+.game .code{font-size:clamp(1.3rem, 2.6vw, 2.2rem); border-radius:14px; width:100%}
+.game .human{font-size:clamp(1.3rem, 2.2vw, 1.9rem); font-weight:600; text-wrap:balance}
+.game .counter{color:var(--muted); font-size:.9rem}
+
+/* ---------- range / chips ---------- */
+.chips{display:flex; flex-wrap:wrap; gap:.5rem}
+.chip{font-family:var(--f-code); font-size:1.3rem; min-width:2.8rem; text-align:center; padding:.35rem .6rem; border-radius:8px; background:var(--blue-soft); border:2px solid var(--blue); color:var(--ink)}
+.chip.stop{border-style:dashed; background:none; color:var(--muted); text-decoration:line-through}
+.range-in{display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; font-family:var(--f-code); font-size:1.3rem}
+.range-in input{width:4.6rem; font-family:var(--f-code); font-size:1.3rem; padding:.2rem .4rem; border-radius:8px; border:2px solid var(--ink); background:var(--surface)}
+
+/* ---------- trace ---------- */
+.trace{width:100%; border-collapse:collapse; font-family:var(--f-code); font-size:1.08rem; font-variant-numeric:tabular-nums}
+.trace th{font-family:var(--f-body); font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); text-align:left; padding:.4rem .7rem; border-bottom:2px solid var(--ink)}
+.trace td{padding:.4rem .7rem; border-bottom:1px solid var(--rule)}
+.trace tr.cur td{background:var(--hl)}
+.trace td.chg{font-weight:700}
+.trace .empty td{color:var(--muted); font-family:var(--f-body); font-style:italic}
+
+/* ---------- list ---------- */
+.lst{display:flex; flex-wrap:wrap; gap:.4rem}
+.cell{display:flex; flex-direction:column; align-items:center; gap:.25rem; cursor:pointer; border:0; background:none; padding:0}
+.cell .ix{font-family:var(--f-code); font-weight:600; font-size:1rem; color:var(--blue)}
+.cell .ix.neg{color:var(--muted); font-weight:400; font-size:.9rem}
+.cell .v{font-size:1.15rem; padding:.7rem .9rem; border:2.5px solid var(--ink); border-radius:8px; background:var(--surface); min-width:6rem; text-align:center}
+.cell.sel .v{background:var(--mark); color:var(--mark-ink)}
+.idx-in{display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; font-family:var(--f-code); font-size:1.3rem}
+.idx-in input{width:5rem; font-family:var(--f-code); font-size:1.3rem; padding:.2rem .45rem; border-radius:8px; border:2px solid var(--ink); background:var(--surface)}
+
+/* ---------- function machine ---------- */
+.machine{display:flex; align-items:center; gap:1rem; flex-wrap:wrap}
+.m-in{display:flex; flex-direction:column; gap:.5rem}
+.m-in label{display:flex; align-items:center; gap:.5rem; font-family:var(--f-code); font-size:1.05rem}
+.m-in input{width:8rem; font-family:var(--f-code); font-size:1.2rem; padding:.25rem .5rem; border-radius:8px; border:2px solid var(--ink); background:var(--surface)}
+.arrow{font-size:2rem; color:var(--muted)}
+.m-box{border:3px solid var(--ink); border-radius:16px; padding:1rem 1.2rem; background:var(--mark); color:var(--mark-ink); font-family:var(--f-code); font-weight:600; font-size:1.25rem; text-align:center}
+.m-box small{display:block; font-family:var(--f-body); font-weight:500; font-size:.8rem}
+.m-out{font-family:var(--f-code); font-size:2rem; font-weight:600; padding:.5rem 1rem; border-radius:12px; border:2px dashed var(--ink); min-width:8rem; text-align:center}
+
+/* ---------- picker ---------- */
+.picker{display:flex; flex-direction:column; gap:1rem}
+.pick-num{font-family:var(--f-display); font-weight:700; font-size:clamp(4rem, 10vw, 8rem); line-height:1; font-variant-numeric:tabular-nums}
+.pick-num.spin{color:var(--muted)}
+.hist{display:flex; flex-wrap:wrap; gap:.4rem}
+.hist span{font-family:var(--f-code); font-size:.95rem; padding:.1rem .5rem; border-radius:6px; border:1px solid var(--rule); background:var(--surface)}
+.check{display:flex; gap:.5rem; align-items:center; font-size:1rem}
+.check input{width:1.2rem; height:1.2rem; accent-color:var(--blue)}
+
+/* ---------- guess game ---------- */
+.guess-row{display:flex; gap:.6rem; padding:.7rem 1rem; background:var(--console-bg); border-top:1px solid var(--code-line); flex-wrap:wrap}
+.guess-row input{width:7rem; background:var(--code-bg); color:var(--code-fg); border:1.5px solid var(--mark); border-radius:6px; padding:.35rem .6rem; font-family:var(--f-code); font-size:1.2rem}
+.console.tall{max-height:16rem; overflow-y:auto}
+
+/* ---------- cheat sheet ---------- */
+.sheet{display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); gap:.2rem 1.6rem}
+.sheet div{display:flex; flex-direction:column; padding:.55rem 0; border-bottom:1px solid var(--rule)}
+.sheet code{font-family:var(--f-code); font-weight:600; font-size:1.05rem; color:var(--blue)}
+.sheet span{color:var(--muted)}
+
+/* ---------- quiz ---------- */
+.quiz{display:flex; flex-direction:column; gap:1rem}
+.quiz-top{display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap}
+.quiz-q{font-size:1.4rem; font-weight:600}
+.qdots{display:flex; gap:.35rem}
+.qdots i{width:.7rem; height:.7rem; border-radius:50%; background:var(--rule)}
+.qdots i.on{background:var(--mark); box-shadow:0 0 0 1.5px var(--mark-ink)}
+
+/* ---------- exit ---------- */
+.tri{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap:1rem}
+.tri div{display:flex; gap:1rem; align-items:flex-start; padding:1rem; border:2px solid var(--ink); border-radius:14px; background:var(--surface)}
+.tri b{font-family:var(--f-display); font-size:3rem; line-height:1; color:var(--blue)}
+.tri p{font-size:1.1rem}
+
+@media (max-width: 760px){
+  .seg-l{display:none}
+  .brand small{display:none}
+  .top{gap:.7rem}
+  .timer-t{min-width:0}
+  .bottom .hide-sm{display:none}
+}
+</style>
+
+<div class="app">
+  <header class="top gutter">
+    <div class="brand">Python <small>11-р анги</small></div>
+    <nav class="rail" id="rail" aria-label="Хичээлийн хэсгүүд"></nav>
+    <div class="timer" id="timer">
+      <span class="timer-t" id="timer-t">00:00 <small>/ 80</small></span>
+      <button class="icon-btn" id="timer-go" type="button" title="Цаг эхлүүлэх / зогсоох (T)">Эхлэх</button>
+      <button class="icon-btn" id="timer-reset" type="button" title="Цагийг 0 болгох">0</button>
+    </div>
+  </header>
+
+  <main class="stage gutter" id="stage">
+
+<!-- ===================== 0. TITLE ===================== -->
+<section class="slide" data-sec="0" data-title="Нүүр">
+  <div class="hero">
+    <div class="stack">
+      <div class="eyebrow"><span>11-р анги · Сонгон хичээл · 80 минут</span></div>
+      <h1><span class="py">Python</span>: эхний алхам</h1>
+      <p class="lead">print()-ээс модуль хүртэл. Өнөөдөр бид компьютергүйгээр, <b>толгойгоороо</b> програм ажиллуулж сурна.</p>
+      <div class="keys">
+        <span><kbd>→</kbd> <kbd>Space</kbd> дараах</span>
+        <span><kbd>←</kbd> өмнөх</span>
+        <span><kbd>N</kbd> багшийн тэмдэглэл</span>
+        <span><kbd>F</kbd> бүтэн дэлгэц</span>
+        <span><kbd>T</kbd> цаг</span>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="runner" data-ex="hook"></div>
+      <p style="color:var(--muted)">Хичээлийн төгсгөлд энэ 5 мөр кодын үг бүрийг ойлгодог болно.</p>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Хичээлээс өмнө самбарын баруун талд «Санах ой» гэж бичээд хувьсагчийн хайрцаг зурах зай үлдээ. Сурагч бүр A4 цаасаа 4 хувааж, «Таамаглал», «Мөшгөх хүснэгт», «Сорил», «3-2-1» гэж гарчиглана. Нүүр дээрх кодыг ажиллуулж, сонгогдсон дугаартай сурагчаас «Энэ код юу хийсэн бэ?» гэж асуу.</aside>
+</section>
+
+<!-- ===================== PLAN ===================== -->
+<section class="slide" data-sec="0" data-title="Хичээлийн төлөвлөгөө">
+  <div class="eyebrow"><span>Багшид · Хичээлийн төлөвлөгөө</span></div>
+  <h2>80 минут, 10 хэсэг</h2>
+  <div class="cols wide-left">
+    <div class="plan" id="plan"></div>
+    <div class="stack">
+      <div class="card">
+        <h3>Хичээлийн зорилго</h3>
+        <ul class="clean">
+          <li>print, хувьсагч, өгөгдлийн 4 төрлийг ялгаж хэрэглэнэ.</li>
+          <li>if, for, while-тэй кодыг цаасан дээр мөр мөрөөр мөшгиж, гаралтыг таамаглана.</li>
+          <li>Функц тодорхойлох, модуль импортлохын утгыг ойлгоно.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Хэрэглэгдэхүүн</h3>
+        <ul class="clean">
+          <li>Проектор (энэ хуудас), самбар, маркер</li>
+          <li>Сурагч бүрт A4 цаас, бал</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Арга</h3>
+        <p>Код бүрийн өмнө <b>«Таамагла»</b>: сурагчид хариугаа цаасан дээр бичнэ, дараа нь дэлгэц дээр ажиллуулж шалгана. Компьютер нь багшийнх ганцхан.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Мөр дээр дарвал тухайн хэсгийн эхний слайд руу шилжинэ. Дээд талын шугамын хэсэг бүрийн өргөн нь түүнд зарцуулах минуттай пропорциональ. Цаг хоцорвол Давталт, Жагсаалтын 2 дахь жишээг алгас. <kbd>T</kbd> дарж цагийг эхлүүлбэл хэсгийн хугацаа хэтэрсэн үед цаг улаан болно.</aside>
+</section>
+
+<!-- ===================== 1. INTRO ===================== -->
+<section class="slide" data-sec="1" data-title="Програм гэж юу вэ?">
+  <h2>Програм гэж юу вэ?</h2>
+  <p class="lead">Програм бол компьютерт өгөх <span class="mk">алхам алхмаар заавар</span>. Компьютер ухаантай биш. Тэр маш хурдан, маш дуулгавартай: хэлсэн зүйлийг <b>яг</b> хийнэ.</p>
+  <div class="cols">
+    <div class="activity">
+      <span class="tag">Дасгал · 3 минут</span>
+      <h3>«Робот багш»</h3>
+      <p>Багш одоо робот. Та нар самбар дээр <b>байшин зуруулах</b> заавар өгнө. Робот зөвхөн хэлсэн үгийг яг хийнэ.</p>
+      <p style="color:var(--muted)">«Маркер ав» гэвэл авна, гэхдээ тагийг нь онгойлгохгүй. Учир нь тэгж хэлээгүй.</p>
+    </div>
+    <div class="stack">
+      <div class="rule"><b>1. Дараалал</b>Заавар дээрээс доош, нэг нэгээр биелнэ.</div>
+      <div class="rule"><b>2. Тодорхой байдал</b>«Тэнд», «тэр» гэх мэт бүдэг үгийг компьютер ойлгохгүй.</div>
+      <div class="rule"><b>3. Хэл</b>Компьютертэй ярих тусгай хэл хэрэгтэй. Өнөөдөр бид <b>Python</b> сурна.</div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Сурагчдаар заавар хэлүүл. Тодорхой бус заавар бүрт зориуд «буруу» хий: «зур» гэвэл агаарт гараараа зур. 3 минутын дараа асуу: «Компьютерт заавар өгөхөд юу хамгийн чухал вэ?» Хариу: дараалал ба тодорхой байдал.</aside>
+</section>
+
+<section class="slide" data-sec="1" data-title="Python хаана байна?">
+  <h2>Python хаана байна?</h2>
+  <div class="facts">
+    <div class="fact"><span class="big">Instagram</span>YouTube, Spotify зэрэг үйлчилгээний сервер талд Python ажилладаг.</div>
+    <div class="fact"><span class="big">NASA</span>Шинжлэх ухааны тооцоолол, сансрын зураг боловсруулалтад.</div>
+    <div class="fact"><span class="big">AI</span>Хиймэл оюун, машин сургалтад хамгийн их хэрэглэгддэг хэл.</div>
+    <div class="fact"><span class="big">1991</span>Голландын програмист Гвидо ван Россум бүтээсэн.</div>
+  </div>
+  <div class="choice-q card" data-reveal>
+    <h3>Python гэдэг нэр хаанаас гаралтай вэ? Гараа өргө.</h3>
+    <div class="opts">
+      <div class="opt"><span class="k">1</span>Том могойн нэрнээс</div>
+      <div class="opt" data-right><span class="k">2</span>Британийн инээдмийн шоу «Monty Python»</div>
+      <div class="opt"><span class="k">3</span>Грекийн домгийн луу Питоноос</div>
+    </div>
+    <div class="why" hidden>Гвидо «Monty Python's Flying Circus» шоунд дуртай байсан тул богино, сонин нэр сонгожээ. Могой нь зөвхөн лого дээр л байдаг.</div>
+    <div class="btn-row"><button class="btn primary" type="button" data-reveal-btn>Хариуг харах</button></div>
+  </div>
+  <aside class="note"><b>Багшид</b>1, 2, 3 гэж гар өргүүлж санал хураа. Python-ийг эхлэгчдэд санал болгодог шалтгаан: код нь англи өгүүлбэр шиг уншигддаг, цөөн тэмдэгттэй.</aside>
+</section>
+
+<!-- ===================== 2. PRINT ===================== -->
+<section class="slide" data-sec="2" data-title="Анхны програм">
+  <h2>Анхны програм: <code class="i">print()</code></h2>
+  <div class="cols wide-left">
+    <div class="runner" data-ex="hello"></div>
+    <div class="stack">
+      <div class="rule"><b>print( )</b>Хаалт доторх зүйлийг дэлгэцэнд хэвлэнэ.</div>
+      <div class="rule"><b>"Сайн уу"</b>Хашилт доторх текстийг <b>string</b> (мөр) гэнэ. <code class="i">"..."</code>, <code class="i">'...'</code> аль аль нь болно.</div>
+      <div class="rule"><b># тайлбар</b><code class="i">#</code>-ээр эхэлсэн мөрийг компьютер уншихгүй. Хүнд зориулсан тэмдэглэл.</div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Ажиллуулахаас өмнө «Дэлгэц дээр яг юу гарах вэ? Хэдэн мөр?» гэж асуу. 1-р мөр (тайлбар) гаралтад харагдахгүйг онцол.</aside>
+</section>
+
+<section class="slide" data-sec="2" data-title="Таамагла · Алдаа">
+  <h2>Таамагла, дараа нь алдаа унш</h2>
+  <div class="cols">
+    <div class="stack">
+      <span class="tag">Таамаглал 1</span>
+      <div class="runner" data-ex="p1" data-predict></div>
+    </div>
+    <div class="stack">
+      <span class="tag">Алдаа бол найз</span>
+      <div class="runner" data-ex="synerr"></div>
+      <p style="color:var(--muted)">Python алдаа гарсан <b>мөр</b>, <b>байрлал</b>, <b>шалтгааныг</b> хэлж өгдөг. Уншиж сурвал засахад амархан.</p>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Таамаглал: 1 минут бичүүлээд хөрштэйгөө харьцуулуул. Түгээмэл буруу хариу: 3-р мөрөнд 5. Текст + текст = залгах. Алдааны жишээн дээр «Юуг засах вэ?» гэж асуугаад «Алдааг засах» дар.</aside>
+</section>
+
+<!-- ===================== 3. VARIABLES ===================== -->
+<section class="slide" data-sec="3" data-title="Хувьсагч = нэртэй хайрцаг">
+  <h2>Хувьсагч = нэртэй хайрцаг</h2>
+  <p class="lead"><code class="i">=</code> нь «тэнцүү» биш. <span class="mk">«Баруун талын утгыг зүүн талын нэртэй хайрцагт хийгээд хадгал»</span> гэсэн үг.</p>
+  <div class="widget" data-widget="vars"></div>
+  <aside class="note"><b>Багшид</b>Самбарт хайрцаг зурж, алхам бүрт хамт шинэчил. 3-р мөрийн өмнө зогсоод «age хэд болох вэ?» гэж асуу. Нэрлэх дүрэм: үсгээр эхэлнэ, зай байхгүй (зайны оронд _), Age ба age өөр хувьсагч.</aside>
+</section>
+
+<section class="slide" data-sec="3" data-title="Өгөгдлийн төрөл">
+  <h2>Өгөгдлийн 4 үндсэн төрөл</h2>
+  <div class="cols">
+    <div class="scroll-x">
+      <table class="ttable">
+        <thead><tr><th>Төрөл</th><th>Утга</th><th>Жишээ</th></tr></thead>
+        <tbody>
+          <tr><td>int</td><td>Бүхэл тоо</td><td><code>16</code>, <code>-5</code>, <code>2026</code></td></tr>
+          <tr><td>float</td><td>Бутархай тоо</td><td><code>1.72</code>, <code>3.14</code>, <code>-0.5</code></td></tr>
+          <tr><td>str</td><td>Текст (мөр)</td><td><code>"Дархан"</code>, <code>"16"</code></td></tr>
+          <tr><td>bool</td><td>Үнэн / худал</td><td><code>True</code>, <code>False</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="runner" data-ex="types"></div>
+  </div>
+  <p class="lead">Анхаар: <code class="i">16</code> бол тоо, <code class="i">"16"</code> бол текст. Хашилт бүх зүйлийг өөрчилнө.</p>
+  <aside class="note"><b>Багшид</b>Сурагчдаас жишээ гаргуул: ангийн сурагчдын тоо (int), жин (float), нэр (str), «өнөөдөр бороо орж байна уу?» (bool).</aside>
+</section>
+
+<section class="slide" data-sec="3" data-title="input()">
+  <h2>Хэрэглэгчээс асуух: <code class="i">input()</code></h2>
+  <div class="cols wide-left">
+    <div class="runner" data-ex="inp"></div>
+    <div class="stack">
+      <div class="rule"><b>input()</b>Гарнаас бичсэн зүйлийг <b>үргэлж текст (str)</b> болгож буцаана.</div>
+      <div class="rule"><b>int( )</b>Текстийг бүхэл тоо болгоно. <code class="i">int("2010")</code> → <code class="i">2010</code></div>
+      <span class="tag">Таамаглал 2</span>
+      <div class="runner" data-ex="p2" data-predict></div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Нэг сурагчийн нэр, төрсөн оныг талбарт бичиж ажиллуул. Дараа нь төрсөн он дээр «хоёр мянга» гэж бичээд алдааг үзүүл: int() үгийг тоо болгож чадахгүй. Таамаглал 2: текстийг 3 удаа давтана, тоог 3-аар үржүүлнэ.</aside>
+</section>
+
+<!-- ===================== 4. OPERATORS ===================== -->
+<section class="slide" data-sec="4" data-title="Арифметик үйлдэл">
+  <h2>Python тооны машин</h2>
+  <div class="widget" data-widget="calc"></div>
+  <aside class="note"><b>Багшид</b>// ба % хамгийн их андуурагддаг. Жишээ: 17 чихрийг 5 хүүхдэд хуваавал хүн бүр 3 авна (17 // 5), 2 үлдэнэ (17 % 5). Сурагчдаар тоо хэлүүлж солиорой. 0-ээр хуваавал юу болохыг үзүүл.</aside>
+</section>
+
+<section class="slide" data-sec="4" data-title="// ба %, f-string">
+  <h2>Энэ хичээл хэдэн цаг үргэлжлэх вэ?</h2>
+  <div class="cols wide-left">
+    <div class="runner" data-ex="time"></div>
+    <div class="stack">
+      <div class="rule"><b>minutes // 60</b>Бүтэн цаг: 60 хэдэн удаа багтах вэ?</div>
+      <div class="rule"><b>minutes % 60</b>Үлдсэн минут: хуваагаад үлдэх хэсэг.</div>
+      <div class="rule"><b>f"... {хувьсагч} ..."</b>f-string: текстийн дотор <code class="i">{ }</code>-д хувьсагчийн утгыг шууд оруулна.</div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Эхлээд цаасан дээр бодуул: 80 минут = ? цаг ? минут. Дараа нь 135, 200, 59 гэх мэт тоогоор шалга.</aside>
+</section>
+
+<!-- ===================== 5. CONDITIONS ===================== -->
+<section class="slide" data-sec="5" data-title="Харьцуулалт, догол">
+  <h2>Харьцуулах ба логик</h2>
+  <div class="cols">
+    <div class="stack">
+      <div class="scroll-x">
+        <table class="ttable">
+          <thead><tr><th>Тэмдэг</th><th>Утга</th><th>Жишээ → үр дүн</th></tr></thead>
+          <tbody>
+            <tr><td>==</td><td>тэнцүү юу?</td><td><code>5 == 5</code> → <code>True</code></td></tr>
+            <tr><td>!=</td><td>тэнцүү биш үү?</td><td><code>5 != 3</code> → <code>True</code></td></tr>
+            <tr><td>&gt; &lt;</td><td>их, бага</td><td><code>2 &gt; 9</code> → <code>False</code></td></tr>
+            <tr><td>&gt;= &lt;=</td><td>их буюу тэнцүү, бага буюу тэнцүү</td><td><code>7 &gt;= 7</code> → <code>True</code></td></tr>
+            <tr><td>and or not</td><td>ба, эсвэл, үгүйсгэл</td><td><code>True and False</code> → <code>False</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <span class="tag">Таамаглал 3</span>
+      <div class="runner" data-ex="p3" data-predict></div>
+    </div>
+    <div class="stack">
+      <div class="rule"><b>= ба ==</b><code class="i">x = 7</code> хадгална. <code class="i">x == 7</code> асууна.</div>
+      <div class="runner" data-ex="indent"></div>
+      <p style="color:var(--muted)">if-ийн дараах <b>хоёр цэг</b> <code class="i">:</code> ба <b>догол</b> (4 зай) нь «энэ мөрүүд нөхцөлд хамаарна» гэсэн үг.</p>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Монголд 16 насандаа иргэний үнэмлэх авдаг тул жишээнд 16-г авсан. = ба ==-ийн ялгааг заавал самбарт бич. Догол алдааг үзүүлээд «Алдааг засах» дар.</aside>
+</section>
+
+<section class="slide" data-sec="5" data-title="if / elif / else">
+  <h2>Дүн гаргагч: <code class="i">if / elif / else</code></h2>
+  <div class="widget" data-widget="grade"></div>
+  <aside class="note"><b>Багшид</b>Гулсуурыг 59, 60, 89, 90 дээр тавьж хилийн утгыг шалга. Асуулт: нөхцлүүдийг эсрэг дарааллаар бичвэл (эхлээд score &gt;= 60) юу болох вэ? Хариу: 95 оноо ч D авна. Python эхний үнэн нөхцлийг л ажиллуулаад бусдыг алгасдаг.</aside>
+</section>
+
+<section class="slide" data-sec="5" data-title="Тоглоом: Босоорой">
+  <div class="eyebrow"><span class="tag">Тоглоом · 3 минут</span></div>
+  <h2>Нөхцөл үнэн бол бос!</h2>
+  <div class="widget" data-widget="standup"></div>
+  <aside class="note"><b>Багшид</b>Нөхцлийг нэг сурагчаар чангаар уншуул, дараа нь бүгд өөрсдөө шалгана. and (хоёулаа үнэн байх ёстой), or (аль нэг нь хангалттай), not (эсрэгээр нь) ялгааг энд биеэрээ мэдэрнэ. else-тэй нөхцөлд хэн ч суугаагүй үлдэх ёсгүй.</aside>
+</section>
+
+<!-- ===================== 6. LOOPS ===================== -->
+<section class="slide" data-sec="6" data-title="for ба range()">
+  <h2>Давталт: <code class="i">for</code> ба <code class="i">range()</code></h2>
+  <div class="cols">
+    <div class="stack">
+      <span class="tag">Таамаглал 4</span>
+      <div class="runner" data-ex="p4" data-predict></div>
+      <p class="lead" style="font-size:1.1rem">Нэг зүйлийг 100 удаа хийх хэрэгтэй бол 100 мөр бичихгүй. Давталт ашиглана.</p>
+    </div>
+    <div class="widget" data-widget="range"></div>
+  </div>
+  <aside class="note"><b>Багшид</b>range(3) = 0, 1, 2. Гурван тоо боловч 3 өөрөө ордоггүй. Сөрөг алхам үзүүл: range(10, 0, -2). Алхам 0 бол алдаа гарна.</aside>
+</section>
+
+<section class="slide" data-sec="6" data-title="Мөшгөх хүснэгт">
+  <h2>Компьютер болж тогло: мөшгөх хүснэгт</h2>
+  <p class="lead">Цаасан дээрээ ижил хүснэгт зур. Алхам бүрийг <b>дэлгэцнээс өмнө</b> өөрөө бөглө.</p>
+  <div class="widget" data-widget="trace"></div>
+  <aside class="note"><b>Багшид</b>Алхам бүрийн өмнө «Одоо аль мөр ажиллах вэ? n, total хэд болох вэ?» гэж асуу. Эцсийн хариу 15 (1+2+3+4+5). Хурдан дуусгасан сурагчид range(1, 11) бол хэд болохыг бодуул (55).</aside>
+</section>
+
+<section class="slide" data-sec="6" data-title="while">
+  <h2><code class="i">while</code>: нөхцөл үнэн байх хооронд</h2>
+  <div class="cols">
+    <div class="runner" data-ex="rocket"></div>
+    <div class="stack">
+      <div class="runner" data-ex="table"></div>
+      <div class="rule"><b>Төгсгөлгүй давталт</b><code class="i">count = count - 1</code> мөрийг мартвал count үргэлж 5 хэвээр, програм хэзээ ч зогсохгүй.</div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>count-ийг 10 болгоод ангиараа хамт чангаар тоолж болно. for нь «хэдэн удаа давтахаа мэдэж байгаа» үед, while нь «хэзээ зогсохоо нөхцлөөр мэддэг» үед тохирно.</aside>
+</section>
+
+<!-- ===================== 7. LISTS ===================== -->
+<section class="slide" data-sec="7" data-title="Жагсаалт ба индекс">
+  <h2>Жагсаалт (list): индекс <span class="mk">0</span>-ээс эхэлнэ</h2>
+  <div class="widget" data-widget="list"></div>
+  <aside class="note"><b>Багшид</b>Индекс 0-ээс эхэлдэг нь хамгийн том урхи. Дарахаас өмнө cities[2], cities[-1], cities[5]-ыг таамаглуул. Хайрцган дээр дарахад индекс нь сонгогдоно.</aside>
+</section>
+
+<section class="slide" data-sec="7" data-title="Жагсаалттай ажиллах">
+  <h2>Жагсаалтад нэмэх, тоолох, давтах</h2>
+  <div class="cols">
+    <div class="stack">
+      <div class="runner" data-ex="listm"></div>
+      <span class="tag">Таамаглал 5</span>
+      <div class="runner" data-ex="p5" data-predict></div>
+    </div>
+    <div class="runner" data-ex="friends"></div>
+  </div>
+  <aside class="note"><b>Багшид</b>append = төгсгөлд нэмэх, len = урт, sum = нийлбэр. friends талбарт ангийн 3–4 сурагчийн нэрийг таслалаар тусгаарлан бичиж ажиллуул. Таамаглал 5: nums[0] + nums[-1] = 10 + 30 = 40.</aside>
+</section>
+
+<!-- ===================== 8. FUNCTIONS ===================== -->
+<section class="slide" data-sec="8" data-title="def">
+  <h2>Функц: нэг удаа бич, олон удаа дууд</h2>
+  <div class="cols">
+    <div class="stack">
+      <div class="runner" data-ex="hello2"></div>
+      <div class="rule"><b>def нэр():</b>Функц тодорхойлно. Доторх мөрүүд доголтой. Дуудах хүртэл ажиллахгүй.</div>
+    </div>
+    <div class="widget" data-widget="machine"></div>
+  </div>
+  <aside class="note"><b>Багшид</b>Функц бол машин: оролт (параметр) → ажил → гаралт (return). Сурагчдаар үнэ, хувиа хэлүүл. Яагаад 40000.0 гэж .0-тэй гарав? / хуваалт үргэлж float буцаадаг.</aside>
+</section>
+
+<section class="slide" data-sec="8" data-title="print ба return">
+  <h2><code class="i">return</code> ба <code class="i">print</code> өөр</h2>
+  <div class="cols">
+    <div class="runner" data-ex="greet"></div>
+    <div class="stack">
+      <span class="tag">Таамаглал 6 · Хэцүү</span>
+      <div class="runner" data-ex="p6" data-predict></div>
+      <div class="rule"><b>print</b>Дэлгэцэнд харуулна. Утга буцаахгүй.</div>
+      <div class="rule"><b>return</b>Утгыг дуудсан газар руу буцааж өгнө. Хувьсагчид хадгалж болно.</div>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>add() return-гүй тул result-д None (юу ч үгүй) хадгалагдана. Ахисан түвшний асуулт, 2 минутаас илүү бүү зарцуул.</aside>
+</section>
+
+<!-- ===================== 9. MODULES ===================== -->
+<section class="slide" data-sec="9" data-title="import">
+  <h2>Модуль: бусдын бичсэн бэлэн багаж</h2>
+  <p class="lead">Python-тэй хамт <b>200 гаруй</b> модуль ирдэг. Интернэтээс (PyPI) <b>500 000 гаруй</b> багц нэмж суулгаж болно. <code class="i">import</code> гэж дуудаад л ашиглана.</p>
+  <div class="cols">
+    <div class="runner" data-ex="math"></div>
+    <div class="runner" data-ex="dt"></div>
+  </div>
+  <aside class="note"><b>Багшид</b>Модуль = багажны хайрцаг. math.sqrt гэдэг нь «math хайрцгаас sqrt багажийг ав» гэсэн утга. datetime жишээ өнөөдрийн бодит огноог ашигладаг.</aside>
+</section>
+
+<section class="slide" data-sec="9" data-title="random, өөрийн модуль">
+  <h2><code class="i">random</code> ба өөрийн модуль</h2>
+  <div class="cols">
+    <div class="widget" data-widget="picker"></div>
+    <div class="stack">
+      <div class="runner static" data-ex="tools"></div>
+      <div class="runner" data-ex="main"></div>
+      <p style="color:var(--muted)">Хоёр файл нэг хавтаст байх ёстой. <code class="i">from tools import square</code> гэвэл <code class="i">tools.</code> гэж бичихгүйгээр шууд <code class="i">square(9)</code> гэж дуудна.</p>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>Энэ сонгогчоор сорилын асуултад хариулах сурагчаа сонго. «Давтахгүй» идэвхтэй бол нэг хүүхэд хоёр удаа гарахгүй.</aside>
+</section>
+
+<!-- ===================== 10. WRAP-UP ===================== -->
+<section class="slide" data-sec="10" data-title="Тоо таах тоглоом">
+  <h2>Бүгдийг нэгтгэе: тоо таах тоглоом</h2>
+  <div class="widget" data-widget="guess"></div>
+  <aside class="note"><b>Багшид</b>Ангиараа нэг тоглоом тогло: сурагчид ээлжлэн тоо хэлнэ. Дараа нь асуу: хамгийн цөөн оролдлогоор яаж таах вэ? Дундаас эхэл (10), тэгээд хагасаар нь хуваа. 20 хүртэлх тоог 5 оролдлогод заавал олно. Кодоос өнөөдөр үзсэн бүх сэдвийг олуул: import, хувьсагч, while, input, int, if/elif, f-string.</aside>
+</section>
+
+<section class="slide" data-sec="10" data-title="Сануулах хуудас">
+  <h2>Өнөөдөр сурсан бүх зүйл</h2>
+  <div class="sheet">
+    <div><code>print("...")</code><span>дэлгэцэнд хэвлэх</span></div>
+    <div><code># тайлбар</code><span>компьютер уншихгүй мөр</span></div>
+    <div><code>x = 5</code><span>хувьсагчид хадгалах</span></div>
+    <div><code>int float str bool</code><span>өгөгдлийн 4 төрөл</span></div>
+    <div><code>input("...")</code><span>гарнаас текст авах</span></div>
+    <div><code>+ - * / // % **</code><span>арифметик үйлдэл</span></div>
+    <div><code>f"{x} настай"</code><span>текстэд утга оруулах</span></div>
+    <div><code>if / elif / else:</code><span>нөхцөл, догол 4 зай</span></div>
+    <div><code>== != &gt; &lt; and or not</code><span>харьцуулах, логик</span></div>
+    <div><code>for i in range(n):</code><span>n удаа давтах</span></div>
+    <div><code>while нөхцөл:</code><span>үнэн байх хооронд давтах</span></div>
+    <div><code>[a, b, c]  x[0]</code><span>жагсаалт, индекс 0-ээс</span></div>
+    <div><code>append  len  sum</code><span>жагсаалтын функцүүд</span></div>
+    <div><code>def f(x): return</code><span>функц тодорхойлох</span></div>
+    <div><code>import math</code><span>модуль ашиглах</span></div>
+  </div>
+  <aside class="note"><b>Багшид</b>Сурагчид энэ хуудсыг утсаараа зураг авч эсвэл дэвтэртээ хуулж болно.</aside>
+</section>
+
+<section class="slide" data-sec="10" data-title="Сорил">
+  <h2>Сорил: хуруугаараа хариул</h2>
+  <div class="widget" data-widget="quiz"></div>
+  <aside class="note"><b>Багшид</b>«3, 2, 1, үзүүл!» гэхэд бүгд хариугаа хуруугаараа (1–4) зэрэг үзүүлнэ. Хариуг харуулахын өмнө санамсаргүй сонгогчоор нэг сурагчаас тайлбар асуу.</aside>
+</section>
+
+<section class="slide" data-sec="10" data-title="3-2-1">
+  <h2>Гарах тасалбар: 3-2-1</h2>
+  <p class="lead">Цаасныхаа сүүлийн хэсэгт бичээд гарахдаа багшид өг.</p>
+  <div class="tri">
+    <div><b>3</b><p>Өнөөдөр сурсан <strong>3 ойлголт</strong></p></div>
+    <div><b>2</b><p>Хамгийн сонирхолтой санагдсан <strong>2 жишээ</strong></p></div>
+    <div><b>1</b><p>Надад үлдсэн <strong>1 асуулт</strong></p></div>
+  </div>
+  <div class="cols">
+    <div class="card">
+      <h3>Гэрийн даалгавар</h3>
+      <p>Нэр, төрсөн оныг асуугаад <b>2030 онд</b> хэдэн настай болохыг хэвлэдэг програмыг цаасан дээр бич. Нэмэлт: 18-аас дээш бол «Сонгуульд санал өгч болно» гэж хэвлэ.</p>
+    </div>
+    <div class="card">
+      <h3>Гэртээ туршиж үзэх</h3>
+      <p>Android утсанд <b>Pydroid 3</b> апп, эсвэл хөтөч дээр <b>programiz.com/python-programming/online-compiler</b> онлайн хөрвүүлэгч. Суулгах шаардлагагүй.</p>
+    </div>
+  </div>
+  <aside class="note"><b>Багшид</b>3-2-1 хуудсыг хаалган дээр цуглуул. Дараагийн хичээлийг тэдгээрийн асуултаас эхлүүл.</aside>
+</section>
+
+  </main>
+
+  <footer class="bottom gutter">
+    <button class="btn sm" id="prev" type="button">← Өмнөх</button>
+    <span class="count" id="count"></span>
+    <button class="btn sm" id="notes-btn" type="button" aria-pressed="false">Тэмдэглэл <kbd class="hide-sm">N</kbd></button>
+    <button class="btn sm hide-sm" id="fs-btn" type="button">Бүтэн дэлгэц <kbd>F</kbd></button>
+    <button class="btn sm primary" id="next" type="button">Дараах →</button>
+  </footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const rint = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("py11-" + k); return v === null ? d : v; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("py11-" + k, v); } catch {} }
+};
+
+/* ---------------- Python helpers ---------------- */
+const toInt = s => /^\s*[+-]?\d+\s*$/.test(String(s)) ? BigInt(String(s).trim()) : null;
+const pyFloat = x => !isFinite(x) ? (isNaN(x) ? "nan" : (x > 0 ? "inf" : "-inf"))
+  : (Number.isInteger(x) && Math.abs(x) < 1e16 ? x.toFixed(1) : String(x));
+const fdiv = (a, b) => { let q = a / b; if (a % b !== 0n && ((a < 0n) !== (b < 0n))) q -= 1n; return q; };
+const fmod = (a, b) => { let r = a % b; if (r !== 0n && ((r < 0n) !== (b < 0n))) r += b; return r; };
+const pyStr = s => "'" + String(s).replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'";
+const E = t => ({ t, err: true });
+const H = t => ({ t, hint: true });
+const tb = (line, src, msg) => [E("Traceback (most recent call last):"), E(`  File "main.py", line ${line}, in <module>`), E("    " + src), E(msg)];
+
+/* ---------------- syntax highlight ---------------- */
+const KW = new Set("def return if elif else for in while import from as and or not True False None pass break continue".split(" "));
+const BI = new Set("print input int float str len range type sum list round".split(" "));
+const TOK = /(#.*$)|(f?"(?:[^"\\]|\\.)*"?|f?'(?:[^'\\]|\\.)*'?)|(\b\d+(?:\.\d+)?\b)|([A-Za-z_Ѐ-ӿ][\wЀ-ӿ]*)|(\s+)|(.)/g;
+function hlLine(line) {
+  let out = "", m;
+  TOK.lastIndex = 0;
+  while ((m = TOK.exec(line)) && m[0] !== "") {
+    const [t, com, str, num, id] = m;
+    if (com) out += `<span class="t-com">${esc(com)}</span>`;
+    else if (str) {
+      let h = esc(str);
+      if (str[0] === "f") h = h.replace(/\{[^}]*\}/g, x => `<span class="t-fx">${x}</span>`);
+      out += `<span class="t-str">${h}</span>`;
+    }
+    else if (num) out += `<span class="t-num">${num}</span>`;
+    else if (id) {
+      if (KW.has(id)) out += `<span class="t-kw">${id}</span>`;
+      else if (BI.has(id)) out += `<span class="t-fn">${id}</span>`;
+      else if (line[TOK.lastIndex] === "(") out += `<span class="t-def">${id}</span>`;
+      else out += id;
+    }
+    else out += esc(t);
+  }
+  return out;
+}
+const codeHTML = code => `<pre class="code"><code>${code.split("\n").map((l, i) =>
+  `<span class="ln" data-n="${i + 1}">${hlLine(l) || " "}</span>`).join("")}</code></pre>`;
+function mark(pre, on = [], no = [], skip = []) {
+  $$(".ln", pre).forEach(el => {
+    const n = +el.dataset.n;
+    el.classList.toggle("on", on.includes(n));
+    el.classList.toggle("no", no.includes(n));
+    el.classList.toggle("skip", skip.includes(n));
+  });
+}
+
+/* ---------------- console printing ---------------- */
+const printing = new WeakMap();
+async function printTo(body, lines, delay = 110) {
+  const tok = {};
+  printing.set(body, tok);
+  body.innerHTML = "";
+  for (const l of lines) {
+    if (printing.get(body) !== tok) return;
+    const d = document.createElement("div");
+    const o = typeof l === "string" ? { t: l } : l;
+    d.className = "out" + (o.err ? " err" : "") + (o.hint ? " hint" : "");
+    d.textContent = o.t;
+    if (o.v !== undefined) { const s = document.createElement("span"); s.className = "v"; s.textContent = o.v; d.appendChild(s); }
+    body.appendChild(d);
+    if (delay && !reduce) await sleep(delay);
+  }
+}
+
+/* ---------------- examples ---------------- */
+const Y = new Date().getFullYear();
+const EX = {
+  hook: {
+    inputs: [{ id: "n", label: "students =", def: "30" }],
+    code: v => `import random\n\nstudents = ${v.n}\nlucky = random.randint(1, students)\nprint(f"Өнөөдрийн азтан: №{lucky}")`,
+    run: v => { const n = toInt(v.n); return n === null || n < 1n ? [H("students-д 1-ээс их бүхэл тоо оруулна уу.")] : [`Өнөөдрийн азтан: №${rint(1, Number(n))}`]; }
+  },
+  hello: {
+    code: `# Миний анхны програм\nprint("Сайн уу, дэлхий!")\nprint("Python-д тавтай морил!")`,
+    run: () => ["Сайн уу, дэлхий!", "Python-д тавтай морил!"]
+  },
+  p1: { code: `print(2 + 3)\nprint("2 + 3")\nprint("2" + "3")`, run: () => ["5", "2 + 3", "23"] },
+  synerr: {
+    code: `print("Сайн уу)`,
+    run: () => [E(`  File "main.py", line 1`), E(`    print("Сайн уу)`), E(`          ^`), E(`SyntaxError: unterminated string literal (detected at line 1)`)],
+    fix: { code: `print("Сайн уу")`, run: () => ["Сайн уу"] }
+  },
+  types: {
+    code: `print(type(17))\nprint(type(1.72))\nprint(type("Сайн уу"))\nprint(type(True))`,
+    run: () => ["<class 'int'>", "<class 'float'>", "<class 'str'>", "<class 'bool'>"]
+  },
+  inp: {
+    inputs: [{ id: "name", label: "Нэр:", def: "Сараа" }, { id: "year", label: "Төрсөн он:", def: String(Y - 16) }],
+    code: `name = input("Нэрээ оруул: ")\nyear = int(input("Төрсөн он: "))\nage = ${Y} - year\nprint(f"{name}, чи энэ жил {age} нас хүрнэ!")`,
+    run: v => {
+      const out = [{ t: "Нэрээ оруул: ", v: v.name }, { t: "Төрсөн он: ", v: v.year }];
+      const y = toInt(v.year);
+      if (y === null) return out.concat(tb(2, `year = int(input("Төрсөн он: "))`, `ValueError: invalid literal for int() with base 10: ${pyStr(v.year)}`));
+      return out.concat([`${v.name}, чи энэ жил ${BigInt(Y) - y} нас хүрнэ!`]);
+    }
+  },
+  p2: { code: `a = "5"\nb = 5\nprint(a * 3)\nprint(b * 3)`, run: () => ["555", "15"] },
+  time: {
+    inputs: [{ id: "m", label: "minutes =", def: "80" }],
+    code: v => `minutes = ${v.m}\nhours = minutes // 60\nrest = minutes % 60\nprint(f"{minutes} минут = {hours} цаг {rest} минут")`,
+    run: v => { const m = toInt(v.m); return m === null ? [H("Бүхэл тоо оруулна уу.")] : [`${m} минут = ${fdiv(m, 60n)} цаг ${fmod(m, 60n)} минут`]; }
+  },
+  p3: { code: `x = 7\nprint(x > 5 and x < 10)\nprint(x == 7 or x == 8)\nprint(not x > 5)`, run: () => ["True", "True", "False"] },
+  indent: {
+    code: `age = 16\nif age >= 16:\nprint("Иргэний үнэмлэх авах нас боллоо")`,
+    run: () => [E(`  File "main.py", line 3`), E(`    print("Иргэний үнэмлэх авах нас боллоо")`), E(`    ^`), E(`IndentationError: expected an indented block after 'if' statement on line 2`)],
+    fix: { code: `age = 16\nif age >= 16:\n    print("Иргэний үнэмлэх авах нас боллоо")`, run: () => ["Иргэний үнэмлэх авах нас боллоо"] }
+  },
+  p4: { code: `for i in range(3):\n    print("Ха")`, run: () => ["Ха", "Ха", "Ха"] },
+  rocket: {
+    inputs: [{ id: "c", label: "count =", def: "5" }],
+    delay: 650,
+    code: v => `count = ${v.c}\nwhile count > 0:\n    print(count)\n    count = count - 1\nprint("Пуужин хөөрлөө!")`,
+    run: v => {
+      const c = toInt(v.c);
+      if (c === null) return [H("Бүхэл тоо оруулна уу.")];
+      if (c > 60n) return [H("60-аас бага тоо оруулна уу, эс тэгвэл хэтэрхий урт болно.")];
+      const out = [];
+      for (let i = c; i > 0n; i--) out.push(String(i));
+      return out.concat(["Пуужин хөөрлөө!"]);
+    }
+  },
+  table: {
+    inputs: [{ id: "n", label: "n =", def: "7" }],
+    delay: 90,
+    code: v => `n = ${v.n}\nfor i in range(1, 11):\n    print(f"{n} x {i} = {n * i}")`,
+    run: v => { const n = toInt(v.n); if (n === null) return [H("Бүхэл тоо оруулна уу.")]; const o = []; for (let i = 1n; i <= 10n; i++) o.push(`${n} x ${i} = ${n * i}`); return o; }
+  },
+  listm: {
+    code: `scores = [85, 92, 78]\nscores.append(95)\nprint(scores)\nprint(len(scores))\nprint(sum(scores) / len(scores))`,
+    run: () => ["[85, 92, 78, 95]", "4", "87.5"]
+  },
+  p5: { code: `nums = [10, 20, 30]\nprint(nums[0] + nums[-1])`, run: () => ["40"] },
+  friends: {
+    inputs: [{ id: "f", label: "Нэрс:", def: "Анар, Билгүүн, Сарнай", wide: true }],
+    code: v => `friends = [${names(v.f).map(n => `"${n}"`).join(", ")}]\n\nfor f in friends:\n    print(f"Сайн уу, {f}!")\n\nprint(f"Нийт {len(friends)} найз")`,
+    run: v => { const n = names(v.f); return n.map(x => `Сайн уу, ${x}!`).concat([`Нийт ${n.length} найз`]); }
+  },
+  hello2: {
+    code: `def say_hello():\n    print("Сайн уу!")\n    print("Python гоё шүү")\n\nsay_hello()\nsay_hello()`,
+    run: () => ["Сайн уу!", "Python гоё шүү", "Сайн уу!", "Python гоё шүү"]
+  },
+  greet: {
+    inputs: [{ id: "n", label: "Нэр:", def: "Анар" }],
+    code: v => `def greet(name):\n    return f"Сайн уу, {name}!"\n\nmessage = greet("${v.n}")\nprint(message)\nprint(greet("Багш"))`,
+    run: v => [`Сайн уу, ${v.n}!`, "Сайн уу, Багш!"]
+  },
+  p6: { code: `def add(a, b):\n    print(a + b)\n\nresult = add(2, 3)\nprint(result)`, run: () => ["5", "None"] },
+  math: {
+    code: `import math\n\nprint(math.sqrt(144))\nprint(math.pi)\nprint(math.ceil(4.2))`,
+    run: () => ["12.0", "3.141592653589793", "5"]
+  },
+  dt: {
+    code: `from datetime import date\n\ntoday = date.today()\nnew_year = date(today.year + 1, 1, 1)\nleft = (new_year - today).days\nprint(f"Өнөөдөр: {today}")\nprint(f"Шинэ он хүртэл {left} хоног үлдлээ!")`,
+    run: () => {
+      const d = new Date(), t = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+      const left = Math.round((Date.UTC(d.getFullYear() + 1, 0, 1) - t) / 864e5);
+      const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      return [`Өнөөдөр: ${iso}`, `Шинэ он хүртэл ${left} хоног үлдлээ!`];
+    }
+  },
+  tools: { file: "tools.py", code: `# tools.py: миний модуль\ndef square(x):\n    return x * x\n\nGREETING = "Сайн уу!"` },
+  main: { code: `import tools\n\nprint(tools.square(9))\nprint(tools.GREETING)`, run: () => ["81", "Сайн уу!"] }
+};
+function names(s) { return String(s).split(",").map(x => x.trim().replace(/"/g, "")).filter(Boolean); }
+
+/* ---------------- runner ---------------- */
+function mountRunner(el) {
+  const key = el.dataset.ex, ex = EX[key], predict = el.hasAttribute("data-predict"), isStatic = !ex.run;
+  const vals = {}; (ex.inputs || []).forEach(i => vals[i.id] = i.def);
+  let fixed = false;
+  el.innerHTML = `
+    <div class="code-head"><span class="file">${ex.file || "main.py"}</span><span class="spacer"></span>
+      ${ex.fix ? `<button class="btn sm fix-btn" type="button">Алдааг засах</button>` : ""}
+      ${isStatic ? "" : `<button class="btn sm primary run-btn" type="button">${predict ? "Хариуг харах" : "▶ Ажиллуулах"}</button>`}</div>
+    <div class="code-wrap"></div>
+    ${ex.inputs ? `<div class="inputs">${ex.inputs.map(i => `<label class="field"><span>${esc(i.label)}</span><input id="in-${key}-${i.id}" class="${i.wide ? "wide" : ""}" value="${esc(i.def)}" autocomplete="off"></label>`).join("")}</div>` : ""}
+    ${isStatic ? "" : `<div class="console" aria-live="polite"><div class="console-label">${predict ? "Эхлээд цаасан дээрээ бич" : "Гаралт"}</div><div class="console-body"></div></div>`}`;
+  const wrap = $(".code-wrap", el), body = $(".console-body", el);
+  const code = () => fixed ? ex.fix.code : (typeof ex.code === "function" ? ex.code(vals) : ex.code);
+  const draw = () => { wrap.innerHTML = codeHTML(code()); };
+  const idle = () => { if (body) body.innerHTML = predict ? `<div class="out ph">? ? ?</div>` : `<div class="out ph">▶ дарж ажиллуул</div>`; };
+  draw(); idle();
+  $$(".inputs input", el).forEach((inp, k) => {
+    inp.addEventListener("input", () => { vals[ex.inputs[k].id] = inp.value; draw(); idle(); });
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") run(); });
+  });
+  function run() { printTo(body, (fixed ? ex.fix.run : ex.run)(vals), ex.delay ?? (predict ? 260 : 120)); }
+  $(".run-btn", el)?.addEventListener("click", run);
+  $(".fix-btn", el)?.addEventListener("click", e => {
+    fixed = !fixed; e.target.textContent = fixed ? "Алдаатай хувилбар" : "Алдааг засах"; draw(); idle();
+  });
+}
+
+/* ---------------- widgets ---------------- */
+const W = {};
+
+W.vars = el => {
+  const code = `name = "Тэмүүлэн"\nage = 16\nage = age + 1\nheight = 1.72\nis_student = True\nprint(name, age)`;
+  const steps = [
+    { v: "name", val: '"Тэмүүлэн"', t: "str", say: "«name» нэртэй хайрцаг үүсч, дотор нь \"Тэмүүлэн\" гэсэн текст орлоо." },
+    { v: "age", val: "16", t: "int", say: "«age» хайрцагт 16 гэсэн бүхэл тоо орлоо." },
+    { v: "age", val: "17", t: "int", say: "Эхлээд баруун талыг бодно: age + 1 = 16 + 1 = 17. Тэгээд 17-г age-д хийнэ. Хуучин 16 устлаа." },
+    { v: "height", val: "1.72", t: "float", say: "Бутархай тоо бол float." },
+    { v: "is_student", val: "True", t: "bool", say: "Үнэн/худал утга бол bool. True, False том үсгээр эхэлнэ." },
+    { out: "Тэмүүлэн 17", say: "print() хайрцгуудын ОДООГИЙН утгыг хэвлэнэ: 16 биш, 17." }
+  ];
+  el.innerHTML = `<div class="cols">
+    <div class="runner"><div class="code-head"><span class="file">main.py</span></div><div class="cw"></div>
+      <div class="console"><div class="console-label">Гаралт</div><div class="console-body"></div></div></div>
+    <div class="stack"><div class="mem"></div><p class="say"></p>
+      <div class="btn-row"><button class="btn primary nx" type="button">Дараагийн мөр ▶</button><button class="btn rs" type="button">Эхнээс</button></div></div>
+  </div>`;
+  const cw = $(".cw", el); cw.innerHTML = codeHTML(code);
+  const pre = $(".code", cw), mem = $(".mem", el), say = $(".say", el), con = $(".console-body", el), nx = $(".nx", el);
+  let i = -1;
+  function reset() {
+    i = -1; mem.innerHTML = ""; con.innerHTML = `<div class="out ph">…</div>`; mark(pre);
+    say.textContent = "Компьютер кодыг дээрээс доош, мөр мөрөөр уншина. 1-р мөрөөс эхэлье."; nx.disabled = false;
+  }
+  function step() {
+    if (i >= steps.length - 1) return;
+    i++; const s = steps[i]; mark(pre, [i + 1], [], []);
+    say.textContent = s.say;
+    if (s.out) { printTo(con, [s.out]); nx.disabled = true; return; }
+    let box = $(`.box[data-v="${s.v}"]`, mem);
+    if (!box) {
+      box = document.createElement("div"); box.className = "box"; box.dataset.v = s.v;
+      box.innerHTML = `<span class="box-name">${s.v}</span><span class="box-val"></span><span class="box-type"></span>`;
+      mem.appendChild(box);
+      $(".box-val", box).textContent = s.val;
+    } else {
+      const old = $(".box-val", box).lastChild.textContent;
+      $(".box-val", box).innerHTML = `<s>${esc(old)}</s><span>${esc(s.val)}</span>`;
+    }
+    $(".box-type", box).textContent = s.t;
+    box.classList.remove("pop"); void box.offsetWidth; box.classList.add("pop");
+  }
+  nx.addEventListener("click", step);
+  $(".rs", el).addEventListener("click", reset);
+  reset();
+};
+
+W.calc = el => {
+  const ops = [
+    ["+", "Нэмэх"], ["-", "Хасах"], ["*", "Үржих"], ["/", "Хуваах"],
+    ["//", "Бүхэл хуваах", 1], ["%", "Үлдэгдэл", 1], ["**", "Зэрэг", 1]
+  ];
+  el.innerHTML = `<div class="stack">
+    <div class="calc-in"><label for="calc-a">a =</label><input id="calc-a" value="17" inputmode="numeric"><label for="calc-b">b =</label><input id="calc-b" value="5" inputmode="numeric"></div>
+    <div class="ops">${ops.map(([o, n, nw]) => `<div class="op${nw ? " new" : ""}"><span class="nm">${n}${nw ? ' <span class="tag">шинэ</span>' : ""}</span><span class="ex">a ${o} b</span><span class="res" data-op="${o}"></span></div>`).join("")}</div>
+  </div>`;
+  const a = $("#calc-a", el), b = $("#calc-b", el);
+  function calc(o, x, y) {
+    const zero = y === 0n;
+    switch (o) {
+      case "+": return String(x + y);
+      case "-": return String(x - y);
+      case "*": return String(x * y);
+      case "/": return zero ? null : pyFloat(Number(x) / Number(y));
+      case "//": return zero ? null : String(fdiv(x, y));
+      case "%": return zero ? null : String(fmod(x, y));
+      case "**": {
+        if (y < 0n) return x === 0n ? null : pyFloat(Math.pow(Number(x), Number(y)));
+        if (y > 300n) return `(${y} зэрэг: хэтэрхий урт)`;
+        const s = String(x ** y);
+        return s.length > 24 ? `${s.slice(0, 10)}… (${s.length} оронтой)` : s;
+      }
+    }
+  }
+  function upd() {
+    const x = toInt(a.value), y = toInt(b.value);
+    $$(".res", el).forEach(r => {
+      r.classList.remove("err");
+      if (x === null || y === null) { r.textContent = "?"; return; }
+      const v = calc(r.dataset.op, x, y);
+      if (v === null) { r.textContent = "ZeroDivisionError"; r.classList.add("err"); }
+      else r.textContent = v;
+    });
+    $$(".ex", el).forEach((e, k) => e.textContent = `${a.value.trim() || "a"} ${ops[k][0]} ${b.value.trim() || "b"}`);
+  }
+  a.addEventListener("input", upd); b.addEventListener("input", upd); upd();
+};
+
+W.grade = el => {
+  const g = [[90, "A"], [80, "B"], [70, "C"], [60, "D"]];
+  const src = s => `score = ${s}\nif score >= 90:\n    grade = "A"\nelif score >= 80:\n    grade = "B"\nelif score >= 70:\n    grade = "C"\nelif score >= 60:\n    grade = "D"\nelse:\n    grade = "F"\nprint(f"Дүн: {grade}")`;
+  el.innerHTML = `<div class="cols wide-left">
+    <div class="runner"><div class="code-head"><span class="file">grade.py</span></div><div class="cw"></div>
+      <div class="console"><div class="console-label">Гаралт</div><div class="console-body"></div></div></div>
+    <div class="stack">
+      <div class="slider"><label for="grade-s" style="font-weight:600">Оноо</label><input type="range" id="grade-s" min="0" max="100" value="87"><span class="val"></span></div>
+      <div class="checks"></div>
+      <div style="display:flex; align-items:center; gap:1rem"><span style="color:var(--muted)">Дүн</span><span class="grade-big"></span></div>
+    </div></div>`;
+  const s = $("#grade-s", el), cw = $(".cw", el), checks = $(".checks", el), con = $(".console-body", el);
+  function upd() {
+    const v = +s.value; $(".val", el).textContent = v;
+    cw.innerHTML = codeHTML(src(v)); const pre = $(".code", cw);
+    const on = [1], no = [], rows = []; let grade = "F", hit = -1;
+    for (let k = 0; k < g.length; k++) {
+      const line = 2 + k * 2;
+      if (v >= g[k][0]) { on.push(line, line + 1); grade = g[k][1]; hit = k; rows.push(`<div class="chk t">${v} &gt;= ${g[k][0]} → True</div>`); break; }
+      no.push(line); rows.push(`<div class="chk f">${v} &gt;= ${g[k][0]} → False</div>`);
+    }
+    if (hit < 0) { on.push(10, 11); rows.push(`<div class="chk t">Бүгд худал → else</div>`); }
+    on.push(12);
+    const skip = []; for (let n = 2; n <= 11; n++) if (!on.includes(n) && !no.includes(n)) skip.push(n);
+    mark(pre, on, no, skip);
+    checks.innerHTML = rows.join("");
+    $(".grade-big", el).textContent = grade;
+    con.innerHTML = ""; const d = document.createElement("div"); d.className = "out"; d.textContent = `Дүн: ${grade}`; con.appendChild(d);
+  }
+  s.addEventListener("input", upd); upd();
+};
+
+W.standup = el => {
+  const C = [
+    ["birth_month <= 6", "1–6 сард төрсөн бол бос."],
+    ["birth_day % 2 == 0", "Төрсөн өдөр чинь тэгш тоо бол бос."],
+    ["siblings >= 2", "2 буюу түүнээс олон ах эгч дүүтэй бол бос."],
+    ["birth_month in [12, 1, 2]", "Өвөл төрсөн бол бос. Бусад нь алга таш!", "clap_hands()"],
+    ["likes_math and likes_music", "Математик БА хөгжим хоёуланд нь дуртай бол бос."],
+    ["likes_tea or likes_coffee", "Цай ЭСВЭЛ кофе, аль нэгэнд нь дуртай бол бос."],
+    ["not has_pet", "Гэрийн тэжээвэр амьтангүй бол бос."],
+    ["len(name) == 4", "Нэр чинь яг 4 үсэгтэй бол бос.", "sit_down()"],
+    ["name[0] in \"АБВГДЕ\"", "Нэр чинь А, Б, В, Г, Д, Е үсгээр эхэлдэг бол бос."],
+    ["wake_hour < 7", "Өглөө 7 цагаас өмнө сэрдэг бол бос.", "yawn()"],
+    ["birth_day == birth_month", "Төрсөн өдөр, сар чинь ижил тоо бол бос (жишээ нь 3 сарын 3)."],
+    ["shoe_size > 40 or height > 175", "Гутлын размер 40-өөс их ЭСВЭЛ 175 см-ээс өндөр бол бос."]
+  ];
+  let order = [], k = -1;
+  el.innerHTML = `<div class="game"><div class="cw" style="width:100%"></div><p class="human"></p>
+    <div class="btn-row"><button class="btn primary nx" type="button">Шинэ нөхцөл</button><span class="counter"></span></div></div>`;
+  function next() {
+    if (!order.length) order = C.map((_, i) => i).sort(() => Math.random() - .5);
+    k = order.pop(); const [cond, say, els] = C[k];
+    const code = `if ${cond}:\n    stand_up()` + (els ? `\nelse:\n    ${els}` : "");
+    $(".cw", el).innerHTML = codeHTML(code);
+    $(".human", el).textContent = say;
+    $(".counter", el).textContent = `${C.length - order.length} / ${C.length}`;
+  }
+  $(".nx", el).addEventListener("click", next); next();
+};
+
+W.range = el => {
+  el.innerHTML = `<div class="stack">
+    <div class="range-in"><span>range(</span><input id="rg-a" value="1" aria-label="start"><span>,</span><input id="rg-b" value="10" aria-label="stop"><span>,</span><input id="rg-c" value="2" aria-label="step"><span>)</span></div>
+    <div class="cw"></div><div class="chips"></div><p class="rg-note" style="color:var(--muted)"></p></div>`;
+  const a = $("#rg-a", el), b = $("#rg-b", el), c = $("#rg-c", el);
+  function upd() {
+    const x = toInt(a.value), y = toInt(b.value), z = toInt(c.value);
+    $(".cw", el).innerHTML = codeHTML(`for i in range(${a.value.trim()}, ${b.value.trim()}, ${c.value.trim()}):\n    print(i)`);
+    const chips = $(".chips", el), note = $(".rg-note", el);
+    if (x === null || y === null || z === null) { chips.innerHTML = ""; note.textContent = "Бүхэл тоо оруулна уу."; return; }
+    if (z === 0n) { chips.innerHTML = `<span class="chip stop" style="text-decoration:none; color:var(--err)">ValueError</span>`; note.textContent = "range() arg 3 must not be zero: алхам 0 байж болохгүй."; return; }
+    const out = []; let n = 0;
+    for (let i = x; (z > 0n ? i < y : i > y) && n < 40; i += z, n++) out.push(i);
+    chips.innerHTML = out.map(v => `<span class="chip">${v}</span>`).join("") + (n >= 40 ? `<span class="chip stop">…</span>` : "") + `<span class="chip stop">${y}</span>`;
+    note.textContent = out.length ? `${out.length} удаа давтана. ${y} (stop) өөрөө ордоггүй.` : `Нэг ч удаа давтахгүй: эхлэл ${z > 0n ? "stop-оос бага биш" : "stop-оос их биш"}.`;
+  }
+  [a, b, c].forEach(i => i.addEventListener("input", upd)); upd();
+};
+
+W.trace = el => {
+  const code = `total = 0\nfor n in range(1, 6):\n    total = total + n\nprint(total)`;
+  const steps = [{ l: 1, n: "", t: 0, ch: "t" }];
+  let t = 0;
+  for (let n = 1; n <= 5; n++) { steps.push({ l: 2, n, t, ch: "n" }); t += n; steps.push({ l: 3, n, t, ch: "t" }); }
+  steps.push({ l: 2, n: 5, t, ch: "", say: "range дууссан" });
+  steps.push({ l: 4, n: 5, t, ch: "", out: String(t) });
+  el.innerHTML = `<div class="cols">
+    <div class="runner"><div class="code-head"><span class="file">sum.py</span></div><div class="cw"></div>
+      <div class="console"><div class="console-label">Гаралт</div><div class="console-body"></div></div></div>
+    <div class="stack"><div class="scroll-x" style="max-height:22rem; overflow-y:auto"><table class="trace"><thead><tr><th>Алхам</th><th>Мөр</th><th>n</th><th>total</th><th>Тайлбар</th></tr></thead><tbody></tbody></table></div>
+    <div class="btn-row"><button class="btn primary nx" type="button">Дараагийн алхам ▶</button><button class="btn rs" type="button">Эхнээс</button></div></div></div>`;
+  $(".cw", el).innerHTML = codeHTML(code);
+  const pre = $(".code", el), tbody = $("tbody", el), con = $(".console-body", el), nx = $(".nx", el);
+  let i = -1;
+  function reset() { i = -1; tbody.innerHTML = `<tr class="empty"><td colspan="5">Цаасан дээрээ эхний мөрийг бөглөөд «Дараагийн алхам» дар.</td></tr>`; con.innerHTML = `<div class="out ph">…</div>`; mark(pre); nx.disabled = false; }
+  function step() {
+    if (i >= steps.length - 1) return;
+    i++; const s = steps[i];
+    if (i === 0) tbody.innerHTML = "";
+    $$("tr", tbody).forEach(r => r.classList.remove("cur"));
+    const why = s.out ? `${s.out}-г хэвлэнэ` : s.say ? s.say : s.l === 1 ? "total-д 0 хадгална" : s.l === 2 ? `n-д дараагийн тоо ${s.n}` : `${s.t - s.n} + ${s.n} = ${s.t}`;
+    const tr = document.createElement("tr"); tr.className = "cur";
+    tr.innerHTML = `<td>${i + 1}</td><td>${s.l}</td><td class="${s.ch === "n" ? "chg" : ""}">${s.n}</td><td class="${s.ch === "t" ? "chg" : ""}">${s.t}</td><td>${why}</td>`;
+    tbody.appendChild(tr); tr.scrollIntoView({ block: "nearest" });
+    mark(pre, [s.l]);
+    if (s.out) { printTo(con, [s.out]); nx.disabled = true; }
+  }
+  nx.addEventListener("click", step); $(".rs", el).addEventListener("click", reset); reset();
+};
+
+W.list = el => {
+  const L = ["Улаанбаатар", "Эрдэнэт", "Дархан", "Ховд", "Мөрөн"];
+  el.innerHTML = `<div class="stack">
+    <div class="cw"></div>
+    <div class="scroll-x"><div class="lst">${L.map((c, i) => `<button class="cell" type="button" data-i="${i}"><span class="ix">${i}</span><span class="v">${c}</span><span class="ix neg">${i - L.length}</span></button>`).join("")}</div></div>
+    <div class="cols" style="align-items:center">
+      <div class="idx-in"><span>print(cities[</span><input id="lst-i" value="2" aria-label="индекс"><span>])</span></div>
+      <div class="runner"><div class="console"><div class="console-label">Гаралт</div><div class="console-body"></div></div></div>
+    </div></div>`;
+  $(".cw", el).innerHTML = codeHTML(`cities = [${L.map(c => `"${c}"`).join(", ")}]`);
+  const inp = $("#lst-i", el), con = $(".console-body", el);
+  function upd() {
+    const k = toInt(inp.value); let sel = -1;
+    if (k === null) { printTo(con, [H("Бүхэл тоо оруулна уу.")], 0); }
+    else {
+      const n = Number(k), idx = n < 0 ? n + L.length : n;
+      if (idx < 0 || idx >= L.length) printTo(con, tb(2, `print(cities[${n}])`, "IndexError: list index out of range"), 0);
+      else { sel = idx; printTo(con, [L[idx]], 0); }
+    }
+    $$(".cell", el).forEach(c => c.classList.toggle("sel", +c.dataset.i === sel));
+  }
+  inp.addEventListener("input", upd);
+  $$(".cell", el).forEach(c => c.addEventListener("click", () => { inp.value = c.dataset.i; upd(); }));
+  upd();
+};
+
+W.machine = el => {
+  el.innerHTML = `<div class="stack">
+    <div class="machine">
+      <div class="m-in"><label for="m-p">price</label><input id="m-p" value="50000" inputmode="numeric"><label for="m-c">percent</label><input id="m-c" value="20" inputmode="numeric"></div>
+      <span class="arrow" aria-hidden="true">→</span>
+      <div class="m-box">discount()<small>хөнгөлөлт бодогч</small></div>
+      <span class="arrow" aria-hidden="true">→</span>
+      <div class="m-out"></div>
+    </div>
+    <div class="cw"></div></div>`;
+  const p = $("#m-p", el), c = $("#m-c", el), out = $(".m-out", el);
+  function upd() {
+    const x = toInt(p.value), y = toInt(c.value);
+    $(".cw", el).innerHTML = codeHTML(`def discount(price, percent):\n    new_price = price - price * percent / 100\n    return new_price\n\nprint(discount(${p.value.trim() || "?"}, ${c.value.trim() || "?"}))`);
+    out.textContent = x === null || y === null ? "?" : pyFloat(Number(x) - Number(x * y) / 100);
+    out.classList.remove("pop"); void out.offsetWidth; out.classList.add("pop");
+  }
+  p.addEventListener("input", upd); c.addEventListener("input", upd); upd();
+};
+
+W.picker = el => {
+  el.innerHTML = `<div class="picker">
+    <div class="cw"></div>
+    <div class="btn-row"><label class="field" style="color:var(--muted)" for="pk-n">Ангийн тоо</label><input id="pk-n" value="30" style="width:5rem; font-family:var(--f-code); font-size:1.2rem; padding:.2rem .4rem; border-radius:8px; border:2px solid var(--ink); background:var(--surface)" inputmode="numeric">
+      <label class="check" for="pk-u"><input type="checkbox" id="pk-u" checked> Давтахгүй</label></div>
+    <div style="display:flex; align-items:center; gap:1.4rem; flex-wrap:wrap"><span class="pick-num">№ —</span><button class="btn primary go" type="button">▶ Сурагч сонгох</button></div>
+    <div class="hist"></div></div>`;
+  const n = $("#pk-n", el), u = $("#pk-u", el), num = $(".pick-num", el), hist = $(".hist", el);
+  let used = [];
+  const draw = () => $(".cw", el).innerHTML = codeHTML(`import random\n\nnumber = random.randint(1, ${n.value.trim() || "?"})\nprint(f"Самбарт гарах: №{number}")`);
+  n.addEventListener("input", () => { used = []; hist.innerHTML = ""; draw(); });
+  draw();
+  let busy = false;
+  $(".go", el).addEventListener("click", async () => {
+    if (busy) return;
+    const N = Number(toInt(n.value) ?? 0n);
+    if (N < 1 || N > 999) { num.textContent = "1–999"; return; }
+    let pool = []; for (let i = 1; i <= N; i++) if (!u.checked || !used.includes(i)) pool.push(i);
+    if (!pool.length) { used = []; hist.innerHTML = ""; pool = Array.from({ length: N }, (_, i) => i + 1); }
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    busy = true; num.classList.add("spin");
+    if (!reduce) for (let k = 0; k < 14; k++) { num.textContent = "№" + rint(1, N); await sleep(40 + k * 9); }
+    num.classList.remove("spin"); num.textContent = "№" + pick; busy = false;
+    num.classList.remove("pop"); void num.offsetWidth; num.classList.add("pop");
+    used.push(pick); hist.innerHTML = used.map(x => `<span>№${x}</span>`).join("");
+  });
+};
+
+W.guess = el => {
+  const code = `import random\n\nsecret = random.randint(1, 20)\nguess = 0\ntries = 0\nwhile guess != secret:\n    guess = int(input("Тоо таа (1-20): "))\n    tries = tries + 1\n    if guess < secret:\n        print("Илүү их тоо хэл")\n    elif guess > secret:\n        print("Илүү бага тоо хэл")\nprint(f"Зөв! {tries} оролдлогоор таалаа.")`;
+  el.innerHTML = `<div class="cols wide-left">
+    <div class="runner"><div class="code-head"><span class="file">guess.py</span></div><div class="cw"></div></div>
+    <div class="runner">
+      <div class="code-head"><span class="file">Терминал</span><span class="spacer"></span><button class="btn sm primary new" type="button">Шинэ тоглоом</button></div>
+      <div class="console tall" aria-live="polite"><div class="console-label">Гаралт</div><div class="console-body"></div></div>
+      <form class="guess-row"><input id="guess-in" inputmode="numeric" autocomplete="off" aria-label="Таамаг"><button class="btn sm primary" type="submit">Enter ↵</button></form>
+    </div></div>`;
+  $(".cw", el).innerHTML = codeHTML(code);
+  const pre = $(".code", el), con = $(".console-body", el), inp = $("#guess-in", el), form = $("form", el);
+  let secret, tries, over;
+  const line = (t, cls = "", v) => { const d = document.createElement("div"); d.className = "out " + cls; d.textContent = t; if (v !== undefined) { const s = document.createElement("span"); s.className = "v"; s.textContent = v; d.appendChild(s); } con.appendChild(d); con.parentElement.scrollTop = 1e6; };
+  function start() { secret = rint(1, 20); tries = 0; over = false; con.innerHTML = ""; line("Тоо таа (1-20): ", "ph"); mark(pre, [7]); inp.disabled = false; inp.value = ""; }
+  form.addEventListener("submit", e => {
+    e.preventDefault(); if (over) return;
+    const raw = inp.value; inp.value = "";
+    const last = con.lastChild; last.classList.remove("ph"); const s = document.createElement("span"); s.className = "v"; s.textContent = raw; last.appendChild(s);
+    const g = toInt(raw);
+    if (g === null) {
+      tb(7, `guess = int(input("Тоо таа (1-20): "))`, `ValueError: invalid literal for int() with base 10: ${pyStr(raw)}`).forEach(x => line(x.t, "err"));
+      line("Програм зогслоо. «Шинэ тоглоом» дар.", "hint"); over = true; inp.disabled = true; mark(pre, [7]); return;
+    }
+    tries++;
+    const n = Number(g);
+    if (n < secret) { line("Илүү их тоо хэл"); mark(pre, [9, 10], [], []); }
+    else if (n > secret) { line("Илүү бага тоо хэл"); mark(pre, [11, 12], [9], []); }
+    else { line(`Зөв! ${tries} оролдлогоор таалаа.`); mark(pre, [13], [6]); over = true; inp.disabled = true; return; }
+    line("Тоо таа (1-20): ", "ph");
+    setTimeout(() => { if (!over) mark(pre, [7]); }, 900);
+  });
+  $(".new", el).addEventListener("click", () => { start(); inp.focus(); });
+  start();
+};
+
+W.quiz = el => {
+  const Q = [
+    { code: `print(10 // 3)`, q: "Юу хэвлэх вэ?", o: ["3.33", "3", "1", "3.0"], a: 1, why: "// бол бүхэл хуваалт: 10-д 3 бүтэн 3 удаа багтана." },
+    { code: `x = "7"\nprint(x * 2)`, q: "Юу хэвлэх вэ?", o: ["14", "77", "7 2", "Алдаа"], a: 1, why: "x текст тул * 2 нь текстийг 2 удаа давтана." },
+    { code: `for i in range(2, 5):\n    print(i)`, q: "Хэдэн мөр хэвлэх вэ?", o: ["2", "3", "4", "5"], a: 1, why: "2, 3, 4 гэж хэвлэнэ. stop буюу 5 ордоггүй." },
+    { code: `nums = [4, 8, 15, 16]\nprint(nums[1])`, q: "Юу хэвлэх вэ?", o: ["4", "8", "15", "IndexError"], a: 1, why: "Индекс 0-ээс эхэлнэ: nums[0] = 4, nums[1] = 8." },
+    { code: `score = 75\nif score >= 80:\n    print("Сайн")\nelif score >= 70:\n    print("Дунд")\nelse:\n    print("Хичээ")`, q: "Юу хэвлэх вэ?", o: ["Сайн", "Дунд", "Хичээ", "Дунд, Хичээ хоёулаа"], a: 1, why: "75 >= 80 худал, 75 >= 70 үнэн. Зөвхөн эхний үнэн салбар ажиллана." },
+    { code: `def double(n):\n    return n * 2\n\nprint(double(double(3)))`, q: "Юу хэвлэх вэ?", o: ["6", "9", "12", "Алдаа"], a: 2, why: "Дотроос нь эхэлнэ: double(3) = 6, дараа нь double(6) = 12." },
+    { code: `import random\nx = random.randint(1, 6)`, q: "x ямар утга авч болох вэ?", o: ["0-ээс 6", "1-ээс 5", "1-ээс 6", "Зөвхөн 6"], a: 2, why: "randint(a, b) нь a, b хоёуланг нь оруулна. range()-ээс ялгаатай!" }
+  ];
+  let k = 0;
+  el.innerHTML = `<div class="quiz">
+    <div class="quiz-top"><span class="quiz-q"></span><span class="qdots">${Q.map(() => "<i></i>").join("")}</span></div>
+    <div class="cols"><div class="cw"></div><div class="opts" style="grid-template-columns:repeat(auto-fit, minmax(min(100%, 12rem), 1fr))"></div></div>
+    <div class="why" hidden></div>
+    <div class="btn-row"><button class="btn pv" type="button">← Өмнөх асуулт</button><button class="btn primary rv" type="button">Хариуг харах</button><button class="btn nx" type="button">Дараагийн асуулт →</button></div></div>`;
+  function draw() {
+    const q = Q[k];
+    $(".quiz-q", el).textContent = `${k + 1}/${Q.length}. ${q.q}`;
+    $$(".qdots i", el).forEach((d, i) => d.classList.toggle("on", i === k));
+    $(".cw", el).innerHTML = codeHTML(q.code);
+    $(".opts", el).innerHTML = q.o.map((o, i) => `<div class="opt"><span class="k">${i + 1}</span><code>${esc(o)}</code></div>`).join("");
+    const w = $(".why", el); w.hidden = true; w.textContent = q.why;
+    $(".pv", el).disabled = k === 0; $(".nx", el).disabled = k === Q.length - 1;
+  }
+  $(".rv", el).addEventListener("click", () => {
+    $$(".opt", el).forEach((o, i) => { o.classList.toggle("right", i === Q[k].a); o.classList.toggle("dim", i !== Q[k].a); });
+    $(".why", el).hidden = false;
+  });
+  $(".pv", el).addEventListener("click", () => { if (k > 0) { k--; draw(); } });
+  $(".nx", el).addEventListener("click", () => { if (k < Q.length - 1) { k++; draw(); } });
+  draw();
+};
+
+/* reveal blocks (Python name question) */
+$$("[data-reveal]").forEach(b => $("[data-reveal-btn]", b).addEventListener("click", () => {
+  $$(".opt", b).forEach(o => { const r = o.hasAttribute("data-right"); o.classList.toggle("right", r); o.classList.toggle("dim", !r); });
+  $(".why", b).hidden = false;
+}));
+
+$$(".runner[data-ex]").forEach(mountRunner);
+$$("[data-widget]").forEach(el => W[el.dataset.widget](el));
+
+/* ---------------- lesson structure ---------------- */
+const SECS = [
+  { name: "Нээлт", from: 0, to: 6, ds: "Програм гэж юу вэ? «Робот багш» дасгал" },
+  { name: "print()", from: 6, to: 12, ds: "Анхны програм, тайлбар, алдаа унших" },
+  { name: "Хувьсагч", from: 12, to: 22, ds: "Нэртэй хайрцаг, 4 төрөл, input()" },
+  { name: "Үйлдэл", from: 22, to: 30, ds: "Арифметик, // ба %, f-string" },
+  { name: "Нөхцөл", from: 30, to: 40, ds: "if / elif / else, «Босоорой» тоглоом" },
+  { name: "Давталт", from: 40, to: 52, ds: "for, range(), мөшгөх хүснэгт, while" },
+  { name: "Жагсаалт", from: 52, to: 60, ds: "Индекс 0-ээс, append, len, sum" },
+  { name: "Функц", from: 60, to: 68, ds: "def, параметр, return ба print" },
+  { name: "Модуль", from: 68, to: 74, ds: "import math, datetime, random, өөрийн модуль" },
+  { name: "Дүгнэлт", from: 74, to: 80, ds: "Тоо таах тоглоом, сорил, 3-2-1" }
+];
+const slides = $$(".slide"), stage = $("#stage"), rail = $("#rail");
+const firstOf = s => slides.findIndex(x => +x.dataset.sec === s);
+
+slides.forEach(sl => {
+  const s = +sl.dataset.sec; if (!s) return;
+  const sec = SECS[s - 1], eb = document.createElement("div");
+  eb.className = "eyebrow";
+  eb.innerHTML = `<span class="num">${String(s).padStart(2, "0")}</span><span>${esc(sec.name)}</span><span>${sec.from}–${sec.to} мин</span>`;
+  const ex = $(".eyebrow", sl);
+  if (ex) ex.prepend(...eb.childNodes); else sl.prepend(eb);
+});
+
+rail.innerHTML = SECS.map((s, i) => `<button class="seg" type="button" style="flex-grow:${s.to - s.from}" data-s="${i + 1}" title="${esc(s.name)} · ${s.from}–${s.to} мин"><span class="seg-bar"></span><span class="seg-l">${i + 1}. ${esc(s.name)}</span></button>`).join("");
+$$(".seg", rail).forEach(b => b.addEventListener("click", () => show(firstOf(+b.dataset.s))));
+$("#plan").innerHTML = SECS.map((s, i) => `<button class="plan-row" type="button" data-s="${i + 1}"><span class="n">${i + 1}</span><span class="nm">${esc(s.name)}</span><span class="mn">${s.from}–${s.to} мин</span><span class="ds">${esc(s.ds)}</span></button>`).join("");
+$$(".plan-row").forEach(b => b.addEventListener("click", () => show(firstOf(+b.dataset.s))));
+
+let cur = 0;
+function show(i) {
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach((s, k) => s.hidden = k !== cur);
+  stage.scrollTop = 0;
+  const sec = +slides[cur].dataset.sec;
+  $$(".seg", rail).forEach(b => { const n = +b.dataset.s; b.classList.toggle("cur", n === sec); b.classList.toggle("done", n < sec); });
+  $("#count").innerHTML = `<b>${cur + 1}</b> / ${slides.length} · ${esc(slides[cur].dataset.title || "")}`;
+  $("#prev").disabled = cur === 0; $("#next").disabled = cur === slides.length - 1;
+  store.set("slide", cur); tick();
+}
+$("#prev").addEventListener("click", () => show(cur - 1));
+$("#next").addEventListener("click", () => show(cur + 1));
+
+/* notes */
+const notesBtn = $("#notes-btn");
+function setNotes(on) { document.body.classList.toggle("notes", on); notesBtn.setAttribute("aria-pressed", on); store.set("notes", on ? "1" : "0"); }
+notesBtn.addEventListener("click", () => setNotes(!document.body.classList.contains("notes")));
+setNotes(store.get("notes", "0") === "1");
+
+/* fullscreen */
+function fs() {
+  if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+  else document.documentElement.requestFullscreen?.().catch(() => {});
+}
+$("#fs-btn").addEventListener("click", fs);
+
+/* timer */
+let tRun = false, tStart = 0, tAcc = 0, lock = null;
+const elapsed = () => tAcc + (tRun ? Date.now() - tStart : 0);
+function tick() {
+  const ms = elapsed(), m = Math.floor(ms / 60000), s = Math.floor(ms / 1000) % 60;
+  $("#timer-t").innerHTML = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")} <small>/ 80</small>`;
+  const sec = SECS[+slides[cur].dataset.sec - 1];
+  $("#timer").classList.toggle("late", !!sec && ms / 60000 > sec.to);
+}
+function toggleTimer() {
+  if (tRun) { tAcc = elapsed(); tRun = false; lock?.release?.().catch(() => {}); lock = null; }
+  else { tStart = Date.now(); tRun = true; navigator.wakeLock?.request("screen").then(l => lock = l).catch(() => {}); }
+  $("#timer-go").textContent = tRun ? "Зогсоох" : (tAcc ? "Үргэлжлүүлэх" : "Эхлэх");
+  tick();
+}
+$("#timer-go").addEventListener("click", toggleTimer);
+$("#timer-reset").addEventListener("click", () => { tAcc = 0; tStart = Date.now(); tick(); });
+setInterval(() => { if (tRun) tick(); }, 500);
+
+/* keyboard */
+document.addEventListener("keydown", e => {
+  const tg = e.target;
+  if (tg.matches("input, textarea, select") || e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key;
+  if (k === "ArrowRight" || k === "PageDown" || (k === " " && !tg.matches("button"))) { e.preventDefault(); show(cur + 1); }
+  else if (k === "ArrowLeft" || k === "PageUp") { e.preventDefault(); show(cur - 1); }
+  else if (k === "Home") show(0);
+  else if (k === "End") show(slides.length - 1);
+  else if (k === "n" || k === "N" || k === "и" || k === "И") setNotes(!document.body.classList.contains("notes"));
+  else if (k === "f" || k === "F" || k === "ө" || k === "Ө") fs();
+  else if (k === "t" || k === "T" || k === "э" || k === "Э") toggleTimer();
+});
+
+const h = /^#s(\d+)$/.exec(location.hash);
+show(h ? +h[1] - 1 : +store.get("slide", 0) || 0);
+})();
+</script>
+
+</body>
+</html>
