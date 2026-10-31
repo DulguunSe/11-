@@ -35,6 +35,10 @@
 
 - [`12-js/`](12-js/) — 12-р анги: React-ын өмнөх JavaScript сэргээлт (80 минут)
 
+## Бусад төсөл
+
+- [`mydent/`](mydent/) — My Dent гэр бүлийн шүдний эмнэлгийн вэбсайт (React + Vite + Tailwind)
+
 ## Файлууд
 
 - `python-hicheel.html` — эх файл (Claude Artifact хэлбэр)

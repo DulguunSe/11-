@@ -1,0 +1,100 @@
+@import 'tailwindcss';
+
+/*
+ * Брэндийн өнгө — My Dent-ийн лого, Facebook постероос авсан.
+ * Brand colours sampled from the My Dent logo and Facebook post banners.
+ */
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Montserrat', 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  --color-brand-50: #f2f9ec;
+  --color-brand-100: #e2f2d4;
+  --color-brand-200: #c7e5ad;
+  --color-brand-300: #a3d47c;
+  --color-brand-400: #7dc24f;
+  --color-brand-500: #5bb531; /* үндсэн ногоон / primary fresh green */
+  --color-brand-600: #3b8224; /* товч, текст (WCAG AA) / buttons & text */
+  --color-brand-700: #2f6f22;
+  --color-brand-800: #245b20;
+  --color-brand-900: #1b5020; /* постерийн хар ногоон / dark green from posts */
+  --color-brand-950: #0f2e12;
+
+  --color-ink: #14261a;
+  --color-muted: #56665b;
+
+  --animate-fade-up: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 6rem;
+  }
+  body {
+    @apply bg-white font-sans text-ink antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+  ::selection {
+    background: var(--color-brand-200);
+  }
+  :focus-visible {
+    outline-color: var(--color-brand-600);
+  }
+}
+
+/* Гүйлгэхэд гарч ирэх анимэйшн */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal-in {
+  opacity: 1;
+  transform: none;
+}
+.reveal > * {
+  height: 100%;
+}
+
+/* Өмнө/дараа гулсуурын бариул бүх талбайг хамарна */
+.ba-range::-webkit-slider-thumb {
+  width: 44px;
+  height: 100%;
+  appearance: none;
+}
+.ba-range::-moz-range-thumb {
+  width: 44px;
+  height: 100%;
+  border: 0;
+}
+.ba-range:focus-visible + * {
+  outline: 2px solid var(--color-brand-600);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
