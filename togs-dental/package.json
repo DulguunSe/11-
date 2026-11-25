@@ -9,9 +9,9 @@
   },
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "build": "tsc -p tsconfig.json --noEmit && vite build && node scripts/build-server.mjs",
+    "build": "tsc -b && vite build && node scripts/build-server.mjs",
     "start": "node --disable-warning=ExperimentalWarning dist/server/index.js",
-    "test": "node --disable-warning=ExperimentalWarning --test tests/api.test.ts",
+    "test": "node --disable-warning=ExperimentalWarning --test --test-reporter=spec tests/api.test.ts tests/ai.test.ts",
     "backup": "node --disable-warning=ExperimentalWarning dist/server/backup.js",
     "create-admin": "node --disable-warning=ExperimentalWarning dist/server/create-admin.js"
   },

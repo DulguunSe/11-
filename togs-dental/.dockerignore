@@ -4,3 +4,6 @@ data
 .git
 tests
 *.md
+.env
+.env.*
+!.env.example

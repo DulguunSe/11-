@@ -1,0 +1,32 @@
+# Сервер дээр: .env файл бэлдээд `docker compose up -d --build`
+# Caddy нь домэйнд автоматаар HTTPS (Let's Encrypt) гэрчилгээ авна.
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - DATA_DIR=/data
+      - PUBLIC_URL=https://${DOMAIN}
+    volumes:
+      - togs-data:/data
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      - DOMAIN=${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+
+volumes:
+  togs-data:
+  caddy-data:
+  caddy-config:

@@ -1,0 +1,64 @@
+@import 'tailwindcss';
+
+/* Төгс брэндийн өнгө (логоны цэнхэр→хөх, ногоон) */
+@theme {
+  --font-sans: 'Golos Text', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Onest', 'Golos Text', system-ui, sans-serif;
+
+  --color-ink: #0c1a2c;
+  --color-muted: #5b6b7f;
+  --color-line: #e3ebf2;
+  --color-soft: #f4f8fb;
+  --color-sky: #e6f6fd;
+  --color-leaf: #eefae4;
+  --color-cyan: #14b9e6;
+  --color-blue: #1466d6;
+  --color-blue-dark: #0f4aa8;
+  --color-lime: #62c71b;
+  --color-lime-dark: #3f8f0c;
+  --color-gold: #a8833a;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-soft font-sans text-ink antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-cyan);
+    outline-offset: 2px;
+  }
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Урт текст grid баганыг дэлгэцээс өргөн болгохоос сэргийлнэ */
+:where(.grid) > * {
+  min-width: 0;
+}
+
+.brand-grad {
+  background-image: linear-gradient(135deg, var(--color-cyan), var(--color-blue));
+}
+.scroll-thin {
+  scrollbar-width: thin;
+}
+@keyframes pulse-soft {
+  50% {
+    opacity: 0.55;
+  }
+}
+.skeleton {
+  animation: pulse-soft 1.4s ease-in-out infinite;
+  background: #e8eef4;
+}

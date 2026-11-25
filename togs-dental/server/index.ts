@@ -102,7 +102,9 @@ if (existsSync(clientDir)) {
     await next()
     if (c.res.status === 200) c.header('Cache-Control', 'public, max-age=31536000, immutable')
   })
-  app.use('*', serveStatic({ root }))
+  // Зөвхөн статик хавтсууд; HTML-ийг доор PUBLIC_URL-тэй нь буцаана
+  app.use('/assets/*', serveStatic({ root }))
+  app.use('/img/*', serveStatic({ root }))
   const html = (file: string) => readFileSync(resolve(clientDir, file), 'utf8').replaceAll('%PUBLIC_URL%', env.publicUrl)
   const siteHtml = html('index.html')
   const adminHtml = html('admin.html')

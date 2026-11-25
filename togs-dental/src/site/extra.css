@@ -1,0 +1,99 @@
+/* Демо загварт нэмсэн хэсгүүд (бодит захиалгын систем) */
+body {
+  margin: 0;
+}
+.ic {
+  display: inline-block;
+}
+.hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.card.skeleton {
+  min-height: 260px;
+  background: linear-gradient(90deg, var(--soft) 25%, #eef4f9 50%, var(--soft) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+.card .price {
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.done .ref {
+  font-size: 1rem;
+  color: var(--ink);
+}
+.done .ref b {
+  font-family: var(--display);
+  font-size: 1.3rem;
+  letter-spacing: 0.08em;
+  color: var(--blue);
+}
+.pill.ok {
+  background: var(--leaf);
+  color: #3f8f0c;
+}
+.ci a.big {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.3rem;
+  font-variant-numeric: tabular-nums;
+}
+.proof a {
+  color: inherit;
+}
+.docs {
+  margin-top: 32px;
+  display: grid;
+  gap: 14px;
+}
+.doclist {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.doc {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 12px 14px;
+}
+.doc .av {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--grad);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-family: var(--display);
+  font-weight: 800;
+  flex: none;
+}
+.doc b {
+  display: block;
+  line-height: 1.25;
+}
+.doc small {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+footer .staff {
+  opacity: 0.75;
+}
+footer .staff:hover {
+  opacity: 1;
+  color: var(--cyan);
+}
