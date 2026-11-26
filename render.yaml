@@ -1,0 +1,17 @@
+# Render.com дээр нэг товшилтоор демо ажиллуулах (togs-dental)
+services:
+  - type: web
+    name: togs-dental-demo
+    runtime: docker
+    plan: free
+    branch: claude/mydent-dental-website-mtanvm
+    dockerfilePath: ./togs-dental/Dockerfile
+    dockerContext: ./togs-dental
+    healthCheckPath: /api/health
+    envVars:
+      - key: SEED_DEMO
+        value: "1"
+      - key: INITIAL_ADMIN_PASSWORD
+        generateValue: true
+      - key: APP_SECRET
+        generateValue: true

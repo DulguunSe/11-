@@ -5,7 +5,8 @@ import { resolve } from 'node:path'
 const dataDir = resolve(process.env.DATA_DIR ?? 'data')
 mkdirSync(dataDir, { recursive: true })
 
-const publicUrl = (process.env.PUBLIC_URL ?? `http://localhost:${process.env.PORT ?? 3000}`).replace(/\/+$/, '')
+// Render.com зэрэг хостинг RENDER_EXTERNAL_URL-ийг автоматаар өгнө
+const publicUrl = (process.env.PUBLIC_URL ?? process.env.RENDER_EXTERNAL_URL ?? `http://localhost:${process.env.PORT ?? 3000}`).replace(/\/+$/, '')
 
 export const env = {
   port: Number(process.env.PORT ?? 3000),
