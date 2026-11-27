@@ -13,7 +13,8 @@
     "start": "node --disable-warning=ExperimentalWarning dist/server/index.js",
     "test": "node --disable-warning=ExperimentalWarning --test --test-reporter=spec tests/api.test.ts tests/ai.test.ts",
     "backup": "node --disable-warning=ExperimentalWarning dist/server/backup.js",
-    "create-admin": "node --disable-warning=ExperimentalWarning dist/server/create-admin.js"
+    "create-admin": "node --disable-warning=ExperimentalWarning dist/server/create-admin.js",
+    "build:demo": "node scripts/build-demo.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.14.0",
@@ -37,6 +38,7 @@
     "esbuild": "^0.28.2",
     "tailwindcss": "^4.3.5",
     "typescript": "^7.0.2",
-    "vite": "^8.3.8"
+    "vite": "^8.3.8",
+    "vite-plugin-singlefile": "^2.3.4"
   }
 }
